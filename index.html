@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sports Recorder - 4K & 1080p Lens Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sports Recorder - Fixed Layout</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
@@ -27,21 +27,24 @@
     body, html {
       width: 100%;
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
       background: #000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Main Viewport Container */
+    /* Main Viewport Container using dynamic viewport height */
     .app-viewport {
       position: relative;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       background: #000;
+      padding-top: env(safe-area-inset-top, 8px);
+      padding-bottom: env(safe-area-inset-bottom, 12px);
     }
 
     #sourceVideo, #hiddenIframe {
@@ -112,7 +115,7 @@
     }
   </style>
 </head>
-<body class="relative bg-black text-white w-screen h-screen overflow-hidden">
+<body class="relative bg-black text-white w-screen h-full overflow-hidden">
 
   <div class="app-viewport">
     
@@ -124,93 +127,71 @@
     <canvas id="renderCanvas"></canvas>
 
     <!-- Top Floating Toolbar -->
-    <div class="absolute top-3 left-3 right-3 glass-panel rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2 z-20 shadow-2xl">
+    <div class="relative w-[94%] max-w-lg mt-2 glass-panel rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-1.5 z-20 shadow-2xl">
       
       <!-- Camera Flip & Brand Logo -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
         <button id="flipCamBtn" title="Switch Front/Rear Camera" class="bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600 text-white p-2 rounded-xl flex items-center justify-center transition-all">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8 3.582 8 8 8-3.582 8-8z"/>
             <polyline points="1 4 1 10 7 10"/>
             <polyline points="23 20 23 14 17 14"/>
           </svg>
         </button>
-        <div class="flex items-center gap-2 px-1">
+        <div class="hidden sm:flex items-center gap-1.5 px-1">
           <div class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse"></div>
-          <span class="font-bold text-xs sm:text-sm tracking-wide hidden sm:inline">MatchRecorder Pro</span>
+          <span class="font-bold text-xs tracking-wide">MatchRecorder</span>
         </div>
       </div>
 
       <!-- Resolution Selector, FPS Selector & Timer -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
+      <div class="flex items-center gap-1">
         <!-- 4K vs 1080p Dropdown -->
-        <select id="resSelect" class="bg-slate-800/90 border border-slate-600 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-sky-400 font-semibold">
-          <option value="1080" selected>1080p (FHD)</option>
-          <option value="2160">4K (UHD)</option>
+        <select id="resSelect" class="bg-slate-800/90 border border-slate-600 text-[11px] text-white rounded-lg px-1.5 py-1 focus:outline-none focus:border-sky-400 font-semibold">
+          <option value="1080" selected>1080p</option>
+          <option value="2160">4K</option>
         </select>
 
         <!-- FPS Selector Dropdown -->
-        <select id="fpsSelect" class="bg-slate-800/90 border border-slate-600 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-sky-400 font-semibold">
+        <select id="fpsSelect" class="bg-slate-800/90 border border-slate-600 text-[11px] text-white rounded-lg px-1.5 py-1 focus:outline-none focus:border-sky-400 font-semibold">
           <option value="30">30 FPS</option>
           <option value="60" selected>60 FPS</option>
         </select>
 
         <!-- Recording Duration Clock Badge -->
-        <div id="recTimer" class="hidden font-mono text-xs font-bold text-red-400 bg-red-950/80 border border-red-500/50 px-2 py-1 rounded-lg">
+        <div id="recTimer" class="hidden font-mono text-[11px] font-bold text-red-400 bg-red-950/80 border border-red-500/50 px-1.5 py-0.5 rounded-lg">
           00:00:00
         </div>
       </div>
 
       <!-- Record Output Action Button -->
-      <div class="flex items-center gap-2">
-        <button id="recordBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      <div class="flex items-center">
+        <button id="recordBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all shadow-md">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
           <span id="recordText">Record</span>
         </button>
       </div>
     </div>
 
-    <!-- Floating Hardware Zoom Control Bar -->
-    <div class="absolute bottom-5 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-3 sm:p-4 w-[92%] max-w-lg flex flex-col gap-2 z-20 shadow-2xl">
+    <!-- Bottom Container Holding Scorecard Preview Indicator & Zoom Controls -->
+    <div class="relative w-[94%] max-w-lg mb-2 flex flex-col gap-2 z-20">
       
-      <!-- Quick-Zoom Preset Buttons -->
-      <div class="flex items-center justify-between gap-1.5">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">Presets:</span>
-        <div class="flex items-center justify-between w-full sm:w-auto gap-1.5 flex-1">
-          <button class="zoom-btn active flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-2.5 rounded-lg text-center" data-zoom="1.0">1x</button>
-          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-2.5 rounded-lg text-center" data-zoom="2.0">2x</button>
-          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-2.5 rounded-lg text-center" data-zoom="4.0">4x</button>
-          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-2.5 rounded-lg text-center" data-zoom="5.0">5x (Tele)</button>
-          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-2.5 rounded-lg text-center" data-zoom="10.0">10x</button>
+      <!-- Zoom Control Bar -->
+      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 w-full flex flex-col gap-2 shadow-2xl">
+        <!-- Quick-Zoom Preset Buttons -->
+        <div class="flex items-center justify-between gap-1">
+          <button class="zoom-btn active flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="1.0">1x</button>
+          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="2.0">2x</button>
+          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="4.0">4x</button>
+          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="5.0">5x</button>
+          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="10.0">10x</button>
         </div>
-      </div>
 
-      <!-- Continuous Zoom Slider -->
-      <div class="flex items-center gap-3 pt-1">
-        <span class="text-xs text-slate-300 font-medium w-8">Zoom</span>
-        <input type="range" id="zoomSlider" class="flex-1 cursor-pointer" min="1" max="10" step="0.1" value="1">
-        <span id="zoomVal" class="text-xs font-mono font-bold text-sky-400 w-12 text-right">1.0x</span>
-      </div>
-    </div>
-
-    <!-- Export Recorded File Modal -->
-    <div id="previewModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex justify-center items-center p-4 z-50">
-      <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-xl w-full flex flex-col gap-4 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-          <div>
-            <h3 class="text-base font-bold text-white">Match Recording Complete</h3>
-            <p id="recordedMeta" class="text-xs text-slate-400">Resolution: 1080p | 60 FPS</p>
-          </div>
-          <button id="closeModalBtn" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
-        </div>
-        
-        <video id="previewVideo" controls class="w-full max-h-[50vh] rounded-xl bg-black object-contain"></video>
-        
-        <div class="flex justify-end gap-3 pt-1">
-          <a id="downloadBtn" href="#" download class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2 text-decoration-none">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Save Video File
-          </a>
+        <!-- Continuous Zoom Slider -->
+        <div class="flex items-center gap-2 pt-0.5">
+          <span class="text-[11px] text-slate-300 font-medium w-8">Zoom</span>
+          <input type="range" id="zoomSlider" class="flex-1 cursor-pointer" min="1" max="10" step="0.1" value="1">
+          <span id="zoomVal" class="text-[11px] font-mono font-bold text-sky-400 w-10 text-right">1.0x</span>
         </div>
       </div>
     </div>
@@ -372,16 +353,16 @@
         ctx.fillRect(0, 0, width, height);
       }
 
-      // 2. Draw Dynamic Transparent Scorecard Overlay
+      // 2. Draw Dynamic Transparent Scorecard Overlay above zoom toolbar
       const scale = (window.devicePixelRatio || 1);
-      const cardW = Math.min(380 * scale, width - (40 * scale));
-      const cardH = 80 * scale;
-      const cardX = 20 * scale;
-      const cardY = height - cardH - (110 * scale);
+      const cardW = Math.min(340 * scale, width - (32 * scale));
+      const cardH = 68 * scale;
+      const cardX = (width - cardW) / 2;
+      const cardY = height - cardH - (110 * scale); // Raised higher so zoom toolbar doesn't obscure it
 
       ctx.save();
       ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctx.shadowBlur = 12 * scale;
+      ctx.shadowBlur = 10 * scale;
 
       // Background Card Box
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
@@ -399,35 +380,35 @@
 
       // Team Name
       ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${15 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.teamA, cardX + (16 * scale), cardY + (30 * scale));
+      ctx.font = `bold ${14 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.teamA, cardX + (14 * scale), cardY + (26 * scale));
 
       // Main Score
       ctx.fillStyle = '#38bdf8';
-      ctx.font = `bold ${22 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.scoreA, cardX + (16 * scale), cardY + (62 * scale));
+      ctx.font = `bold ${20 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.scoreA, cardX + (14 * scale), cardY + (52 * scale));
 
       // Overs Detail
       ctx.fillStyle = '#94a3b8';
-      ctx.font = `500 ${13 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(`Overs: ${overlayState.oversA}`, cardX + (150 * scale), cardY + (62 * scale));
+      ctx.font = `500 ${12 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(`Overs: ${overlayState.oversA}`, cardX + (130 * scale), cardY + (52 * scale));
 
       // Batsman Detail
       ctx.fillStyle = '#f8fafc';
-      ctx.font = `500 ${13 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.batsmanA, cardX + (150 * scale), cardY + (30 * scale));
+      ctx.font = `500 ${12 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.batsmanA, cardX + (130 * scale), cardY + (26 * scale));
 
       // Live Badge
-      const badgeX = cardX + cardW - (68 * scale);
-      const badgeY = cardY + (16 * scale);
+      const badgeX = cardX + cardW - (60 * scale);
+      const badgeY = cardY + (14 * scale);
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
-      ctx.roundRect(badgeX, badgeY, 52 * scale, 20 * scale, 4 * scale);
+      ctx.roundRect(badgeX, badgeY, 46 * scale, 18 * scale, 4 * scale);
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${10 * scale}px -apple-system, sans-serif`;
-      ctx.fillText('LIVE', badgeX + (14 * scale), badgeY + (14 * scale));
+      ctx.font = `bold ${9 * scale}px -apple-system, sans-serif`;
+      ctx.fillText('LIVE', badgeX + (12 * scale), badgeY + (12 * scale));
 
       ctx.restore();
 
