@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sports Recorder - Fixed Layout</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Sports Match Recorder</title>
   <style>
     :root {
       --bg-dark: #0f172a;
@@ -16,24 +15,16 @@
       --text-muted: #94a3b8;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    body, html {
-      width: 100%;
-      height: 100%;
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    
+    html, body {
+      width: 100vw;
       height: 100dvh;
       overflow: hidden;
       background: #000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Main Viewport Container using dynamic viewport height */
     .app-viewport {
       position: relative;
       width: 100vw;
@@ -43,11 +34,9 @@
       justify-content: space-between;
       align-items: center;
       background: #000;
-      padding-top: env(safe-area-inset-top, 8px);
-      padding-bottom: env(safe-area-inset-bottom, 12px);
     }
 
-    #sourceVideo, #hiddenIframe {
+    #sourceVideo {
       position: absolute;
       width: 1px;
       height: 1px;
@@ -59,143 +48,188 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100dvh;
       object-fit: cover;
     }
 
-    /* Glassmorphism Controls Panel */
-    .glass-panel {
+    /* Top Bar */
+    .top-bar {
+      position: relative;
+      z-index: 20;
+      width: calc(100% - 24px);
+      margin-top: calc(12px + env(safe-area-inset-top));
       background: var(--card-bg);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
+      padding: 8px 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .controls-group { display: flex; align-items: center; gap: 6px; }
+
+    .btn, .select-input {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn-record { background: var(--accent-red); border-color: transparent; color: #fff; }
+    .btn-recording { animation: pulse 1.5s infinite; background: #b91c1c; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+    .url-input {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      width: 110px;
+    }
+
+    .rec-timer {
+      font-family: monospace; font-size: 11px; font-weight: 700; color: #fff;
+      background: rgba(239, 68, 68, 0.25); border: 1px solid var(--accent-red); padding: 4px 6px; border-radius: 6px;
+      display: none;
+    }
+
+    /* Bottom Section */
+    .bottom-controls-panel {
+      position: relative;
+      z-index: 20;
+      width: calc(100% - 24px);
+      margin-bottom: calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .zoom-toolbar {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      padding: 8px 12px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
     }
 
     .zoom-btn {
-      transition: all 0.15s ease-in-out;
-    }
-
-    .zoom-btn.active {
-      background-color: var(--accent-blue);
-      color: #0f172a;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 20px;
+      font-size: 11px;
       font-weight: 700;
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
-    }
-
-    .btn-recording {
-      animation: pulse-red 1.5s infinite;
-      background-color: var(--accent-red) !important;
-      color: white !important;
-    }
-
-    @keyframes pulse-red {
-      0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.8; transform: scale(0.98); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    /* Custom Range Slider */
-    input[type=range] {
-      -webkit-appearance: none;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      height: 6px;
-    }
-
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 18px;
-      width: 18px;
-      border-radius: 50%;
-      background: var(--accent-blue);
       cursor: pointer;
-      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+      flex: 1;
+      text-align: center;
     }
+
+    .zoom-btn.active { background: var(--accent-blue); color: #0f172a; }
+    .zoom-slider { width: 80px; accent-color: var(--accent-blue); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); display: none;
+      justify-content: center; align-items: center; z-index: 100;
+    }
+    .modal-card {
+      background: var(--bg-dark); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 16px; width: 90vw; max-width: 500px; display: flex; flex-direction: column; gap: 12px;
+    }
+    #previewVideo { width: 100%; max-height: 50vh; border-radius: 8px; background: #000; }
   </style>
 </head>
-<body class="relative bg-black text-white w-screen h-full overflow-hidden">
+<body>
 
   <div class="app-viewport">
-    
-    <!-- Hidden Raw Camera Video Element -->
     <video id="sourceVideo" autoplay playsinline muted webkit-playsinline></video>
-    <iframe id="hiddenIframe" src="about:blank"></iframe>
-
-    <!-- Main Live Composite Canvas -->
     <canvas id="renderCanvas"></canvas>
 
-    <!-- Top Floating Toolbar -->
-    <div class="relative w-[94%] max-w-lg mt-2 glass-panel rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-1.5 z-20 shadow-2xl">
-      
-      <!-- Camera Flip & Brand Logo -->
-      <div class="flex items-center gap-1.5">
-        <button id="flipCamBtn" title="Switch Front/Rear Camera" class="bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600 text-white p-2 rounded-xl flex items-center justify-center transition-all">
+    <div class="top-bar">
+      <div class="controls-group">
+        <button class="btn" id="flipCamBtn" title="Switch Camera">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8 3.582 8 8 8-3.582 8-8z"/>
             <polyline points="1 4 1 10 7 10"/>
             <polyline points="23 20 23 14 17 14"/>
           </svg>
         </button>
-        <div class="hidden sm:flex items-center gap-1.5 px-1">
-          <div class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse"></div>
-          <span class="font-bold text-xs tracking-wide">MatchRecorder</span>
-        </div>
-      </div>
 
-      <!-- Resolution Selector, FPS Selector & Timer -->
-      <div class="flex items-center gap-1">
-        <!-- 4K vs 1080p Dropdown -->
-        <select id="resSelect" class="bg-slate-800/90 border border-slate-600 text-[11px] text-white rounded-lg px-1.5 py-1 focus:outline-none focus:border-sky-400 font-semibold">
+        <select id="resSelect" class="select-input">
           <option value="1080" selected>1080p</option>
-          <option value="2160">4K</option>
+          <option value="2160">4K (UHD)</option>
         </select>
 
-        <!-- FPS Selector Dropdown -->
-        <select id="fpsSelect" class="bg-slate-800/90 border border-slate-600 text-[11px] text-white rounded-lg px-1.5 py-1 focus:outline-none focus:border-sky-400 font-semibold">
-          <option value="30">30 FPS</option>
-          <option value="60" selected>60 FPS</option>
+        <select id="fpsSelect" class="select-input">
+          <option value="30" selected>30 FPS</option>
+          <option value="60">60 FPS</option>
         </select>
-
-        <!-- Recording Duration Clock Badge -->
-        <div id="recTimer" class="hidden font-mono text-[11px] font-bold text-red-400 bg-red-950/80 border border-red-500/50 px-1.5 py-0.5 rounded-lg">
-          00:00:00
-        </div>
       </div>
 
-      <!-- Record Output Action Button -->
-      <div class="flex items-center">
-        <button id="recordBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all shadow-md">
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      <div class="controls-group">
+        <input type="text" id="overlayUrl" class="url-input" placeholder="Overlay URL..." />
+        <button class="btn" id="loadUrlBtn">Load</button>
+      </div>
+
+      <div class="controls-group">
+        <div id="recTimer" class="rec-timer">00:00:00</div>
+        <button class="btn btn-record" id="recordBtn">
           <span id="recordText">Record</span>
         </button>
       </div>
     </div>
 
-    <!-- Bottom Container Holding Scorecard Preview Indicator & Zoom Controls -->
-    <div class="relative w-[94%] max-w-lg mb-2 flex flex-col gap-2 z-20">
-      
-      <!-- Zoom Control Bar -->
-      <div class="glass-panel rounded-2xl p-2.5 sm:p-3 w-full flex flex-col gap-2 shadow-2xl">
-        <!-- Quick-Zoom Preset Buttons -->
-        <div class="flex items-center justify-between gap-1">
-          <button class="zoom-btn active flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="1.0">1x</button>
-          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="2.0">2x</button>
-          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="4.0">4x</button>
-          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="5.0">5x</button>
-          <button class="zoom-btn flex-1 bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-[11px] font-bold py-1 px-1 rounded-lg text-center" data-zoom="10.0">10x</button>
-        </div>
-
-        <!-- Continuous Zoom Slider -->
-        <div class="flex items-center gap-2 pt-0.5">
-          <span class="text-[11px] text-slate-300 font-medium w-8">Zoom</span>
-          <input type="range" id="zoomSlider" class="flex-1 cursor-pointer" min="1" max="10" step="0.1" value="1">
-          <span id="zoomVal" class="text-[11px] font-mono font-bold text-sky-400 w-10 text-right">1.0x</span>
-        </div>
+    <!-- Bottom Panel -->
+    <div class="bottom-controls-panel">
+      <div class="zoom-toolbar">
+        <button class="zoom-btn active" onclick="setZoom(1)">1x</button>
+        <button class="zoom-btn" onclick="setZoom(2)">2x</button>
+        <button class="zoom-btn" onclick="setZoom(4)">4x</button>
+        <button class="zoom-btn" onclick="setZoom(5)">5x</button>
+        <button class="zoom-btn" onclick="setZoom(10)">10x</button>
+        <input type="range" id="zoomSlider" class="zoom-slider" min="1" max="10" step="0.1" value="1">
+        <span id="zoomVal" style="font-size: 11px; color: var(--text-muted);">1.0x</span>
       </div>
     </div>
+  </div>
 
+  <!-- Modal -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:16px; font-weight:700;">Recording Complete</span>
+        <button class="btn" id="closeModalBtn">&times;</button>
+      </div>
+      <video id="previewVideo" controls></video>
+      <div style="display:flex; gap:10px;">
+        <a id="downloadBtn" class="btn btn-record" style="flex:1; text-align:center; text-decoration:none;" download>Save Video to Storage</a>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -207,14 +241,12 @@
     const fpsSelect = document.getElementById('fpsSelect');
     const zoomSlider = document.getElementById('zoomSlider');
     const zoomVal = document.getElementById('zoomVal');
-    const zoomBtns = document.querySelectorAll('.zoom-btn');
     const recordBtn = document.getElementById('recordBtn');
     const recordText = document.getElementById('recordText');
     const recTimer = document.getElementById('recTimer');
     const previewModal = document.getElementById('previewModal');
     const previewVideo = document.getElementById('previewVideo');
     const downloadBtn = document.getElementById('downloadBtn');
-    const recordedMeta = document.getElementById('recordedMeta');
     const closeModalBtn = document.getElementById('closeModalBtn');
 
     let mediaStream = null;
@@ -222,121 +254,82 @@
     let recordedChunks = [];
     let isRecording = false;
     let videoTrack = null;
-    let currentFacingMode = "environment"; // Default rear camera
+    let currentFacingMode = "environment";
     let recStartTime = 0;
     let timerInterval = null;
     let wakeLock = null;
 
-    // Live Scorecard Overlay State
-    const overlayState = {
-      teamA: "LIONS CC",
-      scoreA: "184/5",
-      oversA: "19.4",
-      batsmanA: "V. Kohli*",
-      runsA: "82 (53)"
-    };
+    let overlayState = { teamA: "LIONS CC", scoreA: "184/5", oversA: "19.4" };
+
+    flipCamBtn.addEventListener('click', () => {
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      startCamera();
+    });
 
     async function startCamera() {
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
 
-      const is4K = resSelect.value === "2160";
-      const targetWidth = is4K ? 3840 : 1920;
-      const targetHeight = is4K ? 2160 : 1080;
-      const targetFps = parseInt(fpsSelect.value) || 60;
+      const resHeight = parseInt(resSelect.value) || 1080;
+      const resWidth = resHeight === 2160 ? 3840 : 1920;
+      const targetFps = parseInt(fpsSelect.value) || 30;
 
-      const constraints = {
-        video: {
-          facingMode: { ideal: currentFacingMode },
-          width: { ideal: targetWidth },
-          height: { ideal: targetHeight },
-          frameRate: { ideal: targetFps }
+      // Soft constraints to prevent device OverconstrainedError crashes
+      const constraintOptions = [
+        {
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: resWidth },
+            height: { ideal: resHeight },
+            frameRate: { ideal: targetFps }
+          },
+          audio: true
         },
-        audio: true
-      };
+        {
+          video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: true
+        },
+        { video: true, audio: true }
+      ];
 
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (err) {
-        console.warn("Strict resolution request failed, falling back to ideal camera constraints:", err);
+      for (let constraints of constraintOptions) {
         try {
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode },
-            audio: true
-          });
-        } catch (finalErr) {
-          console.error("Camera access completely denied:", finalErr);
-          return;
-        }
-      }
-
-      sourceVideo.srcObject = mediaStream;
-      await sourceVideo.play().catch(e => console.warn("Video play exception handled:", e));
-
-      videoTrack = mediaStream.getVideoTracks()[0];
-
-      // Bind Hardware Continuous Zoom capability if provided by OS driver
-      if (videoTrack && videoTrack.getCapabilities) {
-        const capabilities = videoTrack.getCapabilities();
-        if (capabilities.zoom) {
-          zoomSlider.min = capabilities.zoom.min || 1;
-          zoomSlider.max = capabilities.zoom.max || 10;
-          zoomSlider.step = capabilities.zoom.step || 0.1;
-          
-          const currentZoom = videoTrack.getSettings().zoom || 1;
-          setZoomValue(currentZoom, false);
-          zoomSlider.disabled = false;
+          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+          sourceVideo.srcObject = mediaStream;
+          await sourceVideo.play();
+          videoTrack = mediaStream.getVideoTracks()[0];
+          break;
+        } catch (e) {
+          console.warn("Camera fallback triggered:", e);
         }
       }
     }
 
-    async function applyHardwareZoom(value) {
+    async function setZoom(value) {
+      zoomSlider.value = value;
+      zoomVal.innerText = `${value.toFixed(1)}x`;
+
+      document.querySelectorAll('.zoom-btn').forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.innerText) == value);
+      });
+
       if (videoTrack && videoTrack.applyConstraints) {
         try {
           await videoTrack.applyConstraints({ advanced: [{ zoom: value }] });
         } catch (e) {
-          console.warn("Hardware zoom constraints error:", e);
+          console.warn("Hardware zoom warning:", e);
         }
       }
     }
 
-    function setZoomValue(value, triggerHardware = true) {
-      const numValue = parseFloat(value);
-      zoomSlider.value = numValue;
-      zoomVal.innerText = `${numValue.toFixed(1)}x`;
-
-      zoomBtns.forEach(btn => {
-        const btnVal = parseFloat(btn.dataset.zoom);
-        if (Math.abs(btnVal - numValue) < 0.15) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-
-      if (triggerHardware) {
-        applyHardwareZoom(numValue);
-      }
-    }
-
-    // Event Listeners for Controls
-    flipCamBtn.addEventListener('click', () => {
-      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
-      startCamera();
-    });
-
+    zoomSlider.addEventListener('input', () => setZoom(parseFloat(zoomSlider.value)));
     resSelect.addEventListener('change', () => startCamera());
     fpsSelect.addEventListener('change', () => startCamera());
 
-    zoomSlider.addEventListener('input', (e) => setZoomValue(e.target.value, true));
-    zoomBtns.forEach(btn => {
-      btn.addEventListener('click', () => setZoomValue(parseFloat(btn.dataset.zoom), true));
-    });
-
     function resizeCanvas() {
-      renderCanvas.width = window.innerWidth * (window.devicePixelRatio || 1);
-      renderCanvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+      renderCanvas.width = window.innerWidth;
+      renderCanvas.height = window.innerHeight;
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
@@ -345,73 +338,41 @@
       const width = renderCanvas.width;
       const height = renderCanvas.height;
 
-      // 1. Draw raw video stream
-      if (sourceVideo.readyState >= sourceVideo.HAVE_CURRENT_DATA && !sourceVideo.paused) {
+      if (sourceVideo.readyState >= sourceVideo.HAVE_CURRENT_DATA) {
         ctx.drawImage(sourceVideo, 0, 0, width, height);
       } else {
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(0, 0, width, height);
       }
 
-      // 2. Draw Dynamic Transparent Scorecard Overlay above zoom toolbar
-      const scale = (window.devicePixelRatio || 1);
-      const cardW = Math.min(340 * scale, width - (32 * scale));
-      const cardH = 68 * scale;
-      const cardX = (width - cardW) / 2;
-      const cardY = height - cardH - (110 * scale); // Raised higher so zoom toolbar doesn't obscure it
+      // Live Overlay
+      const cardW = Math.min(320, width - 40);
+      const cardH = 70;
+      const cardX = 20;
+      const cardY = height - cardH - 80;
 
       ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctx.shadowBlur = 10 * scale;
-
-      // Background Card Box
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 10;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       ctx.beginPath();
-      ctx.roundRect(cardX, cardY, cardW, cardH, 12 * scale);
+      ctx.roundRect(cardX, cardY, cardW, cardH, 10);
       ctx.fill();
-
-      // Border Outline
-      ctx.lineWidth = 1.2 * scale;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.stroke();
 
       ctx.shadowBlur = 0;
-      ctx.textAlign = 'left';
-
-      // Team Name
       ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${14 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.teamA, cardX + (14 * scale), cardY + (26 * scale));
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(overlayState.teamA, cardX + 14, cardY + 28);
 
-      // Main Score
       ctx.fillStyle = '#38bdf8';
-      ctx.font = `bold ${20 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.scoreA, cardX + (14 * scale), cardY + (52 * scale));
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(overlayState.scoreA, cardX + 14, cardY + 54);
 
-      // Overs Detail
       ctx.fillStyle = '#94a3b8';
-      ctx.font = `500 ${12 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(`Overs: ${overlayState.oversA}`, cardX + (130 * scale), cardY + (52 * scale));
-
-      // Batsman Detail
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = `500 ${12 * scale}px -apple-system, sans-serif`;
-      ctx.fillText(overlayState.batsmanA, cardX + (130 * scale), cardY + (26 * scale));
-
-      // Live Badge
-      const badgeX = cardX + cardW - (60 * scale);
-      const badgeY = cardY + (14 * scale);
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.roundRect(badgeX, badgeY, 46 * scale, 18 * scale, 4 * scale);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${9 * scale}px -apple-system, sans-serif`;
-      ctx.fillText('LIVE', badgeX + (12 * scale), badgeY + (12 * scale));
+      ctx.font = '500 13px sans-serif';
+      ctx.fillText(`Overs: ${overlayState.oversA}`, cardX + 140, cardY + 54);
 
       ctx.restore();
-
       requestAnimationFrame(renderFrame);
     }
 
@@ -426,52 +387,38 @@
     recordBtn.addEventListener('click', async () => {
       if (!isRecording) {
         recordedChunks = [];
-        const targetFps = parseInt(fpsSelect.value) || 60;
-        const canvasStream = renderCanvas.captureStream(targetFps);
-
+        const canvasStream = renderCanvas.captureStream(parseInt(fpsSelect.value) || 30);
         if (mediaStream && mediaStream.getAudioTracks().length > 0) {
           canvasStream.addTrack(mediaStream.getAudioTracks()[0]);
         }
 
-        // Prevent Mobile Screen Sleep during long match recordings
         if ('wakeLock' in navigator) {
           try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
         }
 
-        const options = { mimeType: 'video/webm;codecs=vp9,opus' };
-        try {
-          mediaRecorder = new MediaRecorder(canvasStream, options);
-        } catch (e) {
-          mediaRecorder = new MediaRecorder(canvasStream);
-        }
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) recordedChunks.push(e.data);
-        };
+        mediaRecorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
         mediaRecorder.onstop = () => {
           if (wakeLock) { wakeLock.release(); wakeLock = null; }
           clearInterval(timerInterval);
-          recTimer.classList.add('hidden');
+          recTimer.style.display = 'none';
 
           const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
           const videoUrl = URL.createObjectURL(recordedBlob);
           previewVideo.src = videoUrl;
 
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const fileName = `match-recording-${Date.now()}.webm`;
           downloadBtn.href = videoUrl;
-          downloadBtn.download = `match-recording-${resSelect.value}p-${timestamp}.webm`;
-          
-          recordedMeta.innerText = `Resolution: ${resSelect.value === "2160" ? "4K (2160p)" : "1080p (FHD)"} | ${fpsSelect.value} FPS`;
+          downloadBtn.download = fileName;
 
-          previewModal.classList.remove('hidden');
+          previewModal.style.display = 'flex';
         };
 
-        // Collect timesliced data chunks every 5000ms (5s) for smooth memory handling
         mediaRecorder.start(5000);
         isRecording = true;
         recStartTime = Date.now();
-        recTimer.classList.remove('hidden');
+        recTimer.style.display = 'block';
         timerInterval = setInterval(updateTimer, 1000);
 
         recordBtn.classList.add('btn-recording');
@@ -484,9 +431,7 @@
       }
     });
 
-    closeModalBtn.addEventListener('click', () => {
-      previewModal.classList.add('hidden');
-    });
+    closeModalBtn.addEventListener('click', () => previewModal.style.display = 'none');
 
     startCamera();
     requestAnimationFrame(renderFrame);
