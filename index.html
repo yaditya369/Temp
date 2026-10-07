@@ -2,25 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sports Video Recorder & Overlay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sports Recorder & Live Score Overlay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --card-bg: rgba(15, 23, 42, 0.85);
+      --bg-dark: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.82);
       --card-border: rgba(255, 255, 255, 0.15);
       --accent-blue: #38bdf8;
       --accent-red: #ef4444;
-      --accent-green: #22c55e;
       --text-main: #f8fafc;
-      --text-muted: #94a3b8;
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
       user-select: none;
+      -webkit-user-select: none;
     }
 
     body {
@@ -32,177 +30,476 @@
       width: 100vw;
     }
 
-    /* Main Viewport */
-    .app-viewport {
-      position: relative;
+    /* Video & Canvas Elements */
+    #sourceVideo {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0.001;
+      pointer-events: none;
+    }
+
+    #renderCanvas {
       width: 100vw;
       height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      object-fit: cover;
       background: #000;
+      display: block;
     }
 
-    /* Hidden Camera & Iframe Elements */
-    #sourceVideo, #hiddenIframe {
-      display: none;
-    }
-
-    /* Canvas Rendering View */
-    #renderCanvas {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-    }
-
-    /* Top Control Bar */
-    .top-bar {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      z-index: 10;
+    /* Custom Input Controls & Glassmorphism UI */
+    .glass-panel {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
-      padding: 8px 16px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      flex-wrap: wrap;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .zoom-btn {
+      transition: all 0.15s ease-in-out;
+    }
+
+    .zoom-btn.active {
+      background-color: var(--accent-blue);
+      color: #0f172a;
       font-weight: 700;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-      color: var(--text-main);
-    }
-
-    .brand-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent-blue);
-    }
-
-    .controls-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* Inputs & Select Elements */
-    .btn, .select-input {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-main);
-      border: 1px solid var(--card-border);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-
-    .select-input option {
-      background: #0f172a;
-      color: #fff;
-    }
-
-    .btn:hover, .select-input:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .btn-record {
-      background: var(--accent-red);
-      border-color: transparent;
-      color: #fff;
-    }
-
-    .btn-record:hover {
-      background: #dc2626;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
     }
 
     .btn-recording {
-      animation: pulse 1.5s infinite;
-      background: #b91c1c;
+      animation: pulse-red 1.5s infinite;
+      background-color: var(--accent-red) !important;
+      color: white !important;
     }
 
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.6; }
-      100% { opacity: 1; }
+    @keyframes pulse-red {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1); }
     }
 
-    .url-input {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      width: 220px;
-      outline: none;
+    /* Custom range slider styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      height: 6px;
     }
 
-    .url-input:focus {
-      border-color: var(--accent-blue);
-    }
-
-    /* Zoom Slider Control */
-    .zoom-control {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .zoom-slider {
-      width: 80px;
-      accent-color: var(--accent-blue);
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: var(--accent-blue);
       cursor: pointer;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body class="relative bg-black text-white w-screen h-screen overflow-hidden">
+
+  <div class="relative w-full h-full flex justify-center items-center">
+    
+    <!-- Hidden Raw Camera Stream Video Element -->
+    <video id="sourceVideo" autoplay playsinline muted webkit-playsinline></video>
+
+    <!-- Main Live Composite Rendering Canvas -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- HTTPS Security Warning Overlay -->
+    <div id="warningBanner" class="hidden absolute bottom-24 left-4 right-4 bg-red-600/90 text-white p-3 rounded-xl text-center text-xs sm:text-sm font-medium z-30 shadow-lg backdrop-blur-md">
+      ⚠️ Mobile camera access requires an <strong>HTTPS connection</strong> or <strong>localhost</strong>. Please ensure secure SSL hosting.
+    </div>
+
+    <!-- Top Toolbar Controls -->
+    <div class="absolute top-3 left-3 right-3 glass-panel rounded-2xl p-2 sm:p-3 flex flex-wrap items-center justify-between gap-2 z-20 shadow-2xl">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2 px-2">
+        <div class="w-3 h-3 rounded-full bg-sky-400 animate-pulse"></div>
+        <span class="font-bold text-sm sm:text-base tracking-wide">MatchRecorder Pro</span>
+      </div>
+
+      <!-- Camera Lens Picker & FPS Switcher -->
+      <div class="flex items-center gap-2">
+        <select id="cameraSelect" class="bg-slate-800/80 border border-slate-600 text-xs sm:text-sm text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-400">
+          <option value="">Detecting Lenses...</option>
+        </select>
+
+        <select id="fpsSelect" class="bg-slate-800/80 border border-slate-600 text-xs sm:text-sm text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-400">
+          <option value="30">30 FPS</option>
+          <option value="60" selected>60 FPS</option>
+        </select>
+      </div>
+
+      <!-- Record Output Action Button -->
+      <div class="flex items-center gap-2">
+        <button id="recordBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs sm:text-sm px-4 py-1.5 rounded-lg flex items-center gap-2 transition-all shadow-md">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+          <span id="recordText">Record</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Floating Hardware Zoom Control Bar (Bottom Center) -->
+    <div class="absolute bottom-5 left-1/2 transform -translate-x-1/2 glass-panel rounded-2xl p-3 sm:p-4 w-[92%] max-w-lg flex flex-col gap-2 z-20 shadow-2xl">
+      
+      <!-- Quick-Zoom Preset Buttons (1x, 2x, 4x, 5x, 10x) -->
+      <div class="flex items-center justify-between gap-1.5">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">Presets:</span>
+        <div class="flex items-center justify-between w-full sm:w-auto gap-1.5 flex-1">
+          <button class="zoom-btn active flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-3 rounded-lg text-center" data-zoom="1.0">1x</button>
+          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-3 rounded-lg text-center" data-zoom="2.0">2x</button>
+          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-3 rounded-lg text-center" data-zoom="4.0">4x</button>
+          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-3 rounded-lg text-center" data-zoom="5.0">5x</button>
+          <button class="zoom-btn flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-xs font-bold py-1.5 px-3 rounded-lg text-center" data-zoom="10.0">10x</button>
+        </div>
+      </div>
+
+      <!-- Continuous Zoom Slider -->
+      <div class="flex items-center gap-3 pt-1">
+        <span class="text-xs text-slate-300 font-medium w-6">Zoom</span>
+        <input type="range" id="zoomSlider" class="flex-1 cursor-pointer" min="1" max="10" step="0.1" value="1">
+        <span id="zoomVal" class="text-xs font-mono font-bold text-sky-400 w-12 text-right">1.0x</span>
+      </div>
+    </div>
+
+    <!-- Recorded Video Output & Save Preview Modal -->
+    <div id="previewModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex justify-center items-center p-4 z-50">
+      <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-xl w-full flex flex-col gap-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+          <h3 class="text-lg font-bold text-white">Recording Saved to Device Memory</h3>
+          <button id="closeModalBtn" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+        </div>
+        
+        <video id="previewVideo" controls class="w-full max-h-[55vh] rounded-xl bg-black object-contain"></video>
+        
+        <div class="flex justify-end gap-3 pt-2">
+          <a id="downloadLink" href="#" download="match-recording.webm" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Save File to Local Downloads
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // System Element Selectors
+    const sourceVideo = document.getElementById('sourceVideo');
+    const renderCanvas = document.getElementById('renderCanvas');
+    const ctx = renderCanvas.getContext('2d');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const fpsSelect = document.getElementById('fpsSelect');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomVal = document.getElementById('zoomVal');
+    const zoomBtns = document.querySelectorAll('.zoom-btn');
+    const recordBtn = document.getElementById('recordBtn');
+    const recordText = document.getElementById('recordText');
+    const warningBanner = document.getElementById('warningBanner');
+    const previewModal = document.getElementById('previewModal');
+    const previewVideo = document.getElementById('previewVideo');
+    const downloadLink = document.getElementById('downloadLink');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let videoTrack = null;
+
+    // Live Transparent Overlay State
+    const overlayState = {
+      teamA: "LIONS CC",
+      scoreA: "168/4",
+      oversA: "18.2",
+      batsmanA: "R. Sharma*",
+      runsA: "45 (28)"
+    };
+
+    // Protocol check for Secure Web RTC access
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      warningBanner.classList.remove('hidden');
     }
 
-    /* Video Download Preview Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
+    async function getCameraDevices() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        cameraSelect.innerHTML = '';
+        videoDevices.forEach((device, index) => {
+          const option = document.createElement('option');
+          option.value = device.deviceId;
+          
+          // Custom labeling for Pixel 9 Pro lenses (Main, Ultra-Wide, Telephoto)
+          let label = device.label || `Camera Lens ${index + 1}`;
+          if (label.toLowerCase().includes('back')) {
+            if (index === 0) label = "Main Lens (1x)";
+            else if (index === 1) label = "Ultra-Wide Lens (0.5x)";
+            else if (index === 2) label = "Telephoto Lens (5x)";
+          }
+          option.text = label;
+          cameraSelect.appendChild(option);
+        });
+
+        if (videoDevices.length > 0) {
+          startCamera(videoDevices[0].deviceId);
+        }
+      } catch (err) {
+        console.warn("Camera enumeration error:", err);
+        startCamera(null);
+      }
     }
 
-    .modal-card {
-      background: var(--bg-dark);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 90vw;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    async function startCamera(deviceId) {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+
+      const targetFps = parseInt(fpsSelect.value) || 60;
+      const constraints = {
+        video: deviceId 
+          ? { deviceId: { exact: deviceId }, frameRate: { ideal: targetFps } } 
+          : { facingMode: { ideal: "environment" }, frameRate: { ideal: targetFps } },
+        audio: true
+      };
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("Exact camera setup failed, falling back to basic stream:", err);
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (finalErr) {
+          console.error("Camera permissions fully denied:", finalErr);
+          warningBanner.innerText = "Camera access denied. Please allow permissions in browser settings.";
+          warningBanner.classList.remove('hidden');
+          return;
+        }
+      }
+
+      sourceVideo.srcObject = mediaStream;
+      sourceVideo.play().catch(e => console.log("Play constraint handled:", e));
+
+      videoTrack = mediaStream.getVideoTracks()[0];
+
+      // Bind Native Hardware Zoom Capabilities
+      if (videoTrack && videoTrack.getCapabilities) {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.zoom) {
+          zoomSlider.min = capabilities.zoom.min || 1;
+          zoomSlider.max = capabilities.zoom.max || 10;
+          zoomSlider.step = capabilities.zoom.step || 0.1;
+          
+          const currentZoom = videoTrack.getSettings().zoom || 1;
+          setZoomValue(currentZoom, false);
+          zoomSlider.disabled = false;
+        } else {
+          console.warn("Hardware continuous zoom track unsupported on this specific lens.");
+        }
+      }
     }
 
-    .
+    async function applyHardwareZoom(value) {
+      if (videoTrack && videoTrack.applyConstraints) {
+        try {
+          await videoTrack.applyConstraints({ advanced: [{ zoom: value }] });
+        } catch (e) {
+          console.warn("Hardware zoom error:", e);
+        }
+      }
+    }
+
+    function setZoomValue(value, triggerHardware = true) {
+      const numValue = parseFloat(value);
+      zoomSlider.value = numValue;
+      zoomVal.innerText = `${numValue.toFixed(1)}x`;
+
+      // Highlight corresponding preset button if matching
+      zoomBtns.forEach(btn => {
+        const btnVal = parseFloat(btn.dataset.zoom);
+        if (Math.abs(btnVal - numValue) < 0.15) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      if (triggerHardware) {
+        applyHardwareZoom(numValue);
+      }
+    }
+
+    // Slider Event Listener
+    zoomSlider.addEventListener('input', (e) => {
+      setZoomValue(e.target.value, true);
+    });
+
+    // Preset Buttons Event Listeners
+    zoomBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetZoom = parseFloat(btn.dataset.zoom);
+        setZoomValue(targetZoom, true);
+      });
+    });
+
+    cameraSelect.addEventListener('change', () => startCamera(cameraSelect.value));
+    fpsSelect.addEventListener('change', () => startCamera(cameraSelect.value));
+
+    // Dynamic Canvas Sizing
+    function resizeCanvas() {
+      renderCanvas.width = window.innerWidth * (window.devicePixelRatio || 1);
+      renderCanvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function renderFrame() {
+      const width = renderCanvas.width;
+      const height = renderCanvas.height;
+
+      // 1. Render Source Camera Stream
+      if (sourceVideo.readyState >= sourceVideo.HAVE_CURRENT_DATA && !sourceVideo.paused) {
+        ctx.drawImage(sourceVideo, 0, 0, width, height);
+      } else {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = `${14 * (window.devicePixelRatio || 1)}px -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('Initializing Camera Stream...', width / 2, height / 2);
+      }
+
+      // 2. Render Live Transparent Scorecard Overlay
+      const scale = (window.devicePixelRatio || 1);
+      const cardW = Math.min(380 * scale, width - (40 * scale));
+      const cardH = 80 * scale;
+      const cardX = 20 * scale;
+      const cardY = height - cardH - (110 * scale); // Positioned comfortably above bottom zoom controls
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 12 * scale;
+
+      // Card Background Glass Box
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 12 * scale);
+      ctx.fill();
+
+      // Card Border Accent
+      ctx.lineWidth = 1.2 * scale;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.textAlign = 'left';
+
+      // Team Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${15 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.teamA, cardX + (16 * scale), cardY + (30 * scale));
+
+      // Main Score
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = `bold ${22 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.scoreA, cardX + (16 * scale), cardY + (62 * scale));
+
+      // Overs Detail
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = `500 ${13 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(`Overs: ${overlayState.oversA}`, cardX + (150 * scale), cardY + (62 * scale));
+
+      // On-Strike Batsman
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = `500 ${13 * scale}px -apple-system, sans-serif`;
+      ctx.fillText(overlayState.batsmanA, cardX + (150 * scale), cardY + (30 * scale));
+
+      // LIVE Indicator Badge
+      const badgeX = cardX + cardW - (68 * scale);
+      const badgeY = cardY + (16 * scale);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, 52 * scale, 20 * scale, 4 * scale);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${10 * scale}px -apple-system, sans-serif`;
+      ctx.fillText('LIVE', badgeX + (14 * scale), badgeY + (14 * scale));
+
+      ctx.restore();
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    recordBtn.addEventListener('click', () => {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    });
+
+    function startRecording() {
+      recordedChunks = [];
+      const targetFps = parseInt(fpsSelect.value) || 60;
+      const canvasStream = renderCanvas.captureStream(targetFps);
+
+      // Attach Audio Track if Available
+      if (mediaStream && mediaStream.getAudioTracks().length > 0) {
+        canvasStream.addTrack(mediaStream.getAudioTracks()[0]);
+      }
+
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      try {
+        mediaRecorder = new MediaRecorder(canvasStream, options);
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(canvasStream);
+      }
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoUrl = URL.createObjectURL(blob);
+        previewVideo.src = videoUrl;
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        downloadLink.href = videoUrl;
+        downloadLink.download = `match-recording-${timestamp}.webm`;
+        
+        previewModal.classList.remove('hidden');
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      recordBtn.classList.add('btn-recording');
+      recordText.innerText = 'Stop';
+    }
+
+    function stopRecording() {
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      recordBtn.classList.remove('btn-recording');
+      recordText.innerText = 'Record';
+    }
+
+    closeModalBtn.addEventListener('click', () => {
+      previewModal.classList.add('hidden');
+    });
+
+    // Boot Up Application Engine
+    getCameraDevices();
+    requestAnimationFrame(renderFrame);
+  </script>
+</body>
+</html>
