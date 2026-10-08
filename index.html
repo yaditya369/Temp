@@ -1,783 +1,418 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Sports Recorder & Live Score Overlay</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome for Pro Camera Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cricket Match Recorder (Landscape)</title>
   <style>
-    /* Custom CSS animations and glassmorphism UI rules */
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      touch-action: manipulation;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       user-select: none;
       -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background-color: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
     }
 
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+    /* Fullscreen Camera Container */
+    #app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
     }
 
-    .glass-button {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.2s ease;
+    video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
     }
 
-    .glass-button:active {
-      transform: scale(0.95);
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    /* Rec Button Pulse */
-    @keyframes recPulse {
-      0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.7); }
-      70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
-      100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); }
-    }
-
-    .recording-pulse {
-      animation: recPulse 1.8s infinite;
-    }
-
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 9999px;
-    }
-
-    /* Hide standard UI in iframe */
-    #overlayIframe {
+    /* Top Control Bar */
+    .top-bar {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      right: 16px;
+      height: 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
       pointer-events: none;
+    }
+
+    .top-bar > * {
+      pointer-events: auto;
+    }
+
+    .left-controls, .right-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-toggle.active {
+      background: rgba(16, 185, 129, 0.85);
+      border-color: #34d399;
+    }
+
+    .btn-toggle.inactive {
+      background: rgba(239, 68, 68, 0.85);
+      border-color: #f87171;
+    }
+
+    .record-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+      cursor: pointer;
+    }
+
+    .record-btn.recording {
+      background: #dc2626;
+      animation: pulse 1.5s infinite;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Scorecard Overlay Box - Placed cleanly in Top-Left in Landscape */
+    #overlay-wrapper {
+      position: absolute;
+      top: 68px;
+      left: 16px;
+      width: clamp(320px, 45vw, 600px);
+      height: 130px;
+      z-index: 30;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      transition: opacity 0.3s ease;
+    }
+
+    #overlay-wrapper.hidden {
+      display: none;
+    }
+
+    #overlay-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
       background: transparent;
+    }
+
+    /* Bottom Control Bar - Zoom Controls */
+    .bottom-bar {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 4px 8px;
+      display: flex;
+      gap: 6px;
+      backdrop-filter: blur(8px);
+    }
+
+    .zoom-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .zoom-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    /* Portrait Rotation Warning */
+    #landscape-warning {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      z-index: 9999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #landscape-warning svg {
+      width: 64px;
+      height: 64px;
+      fill: #38bdf8;
+      margin-bottom: 16px;
+      animation: rotateHint 2s infinite ease-in-out;
+    }
+
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-90deg); }
+    }
+
+    @media screen and (orientation: portrait) {
+      #landscape-warning {
+        display: flex;
+      }
     }
   </style>
 </head>
-<body class="h-full w-full bg-black text-white relative overflow-hidden flex flex-col justify-between select-none">
+<body>
 
-  <!-- Raw Video Element (Hidden, used as source for canvas recorder) -->
-  <video id="webcamVideo" autoplay playsinline muted class="hidden"></video>
-
-  <!-- Interactive Recording / Overlay Canvas -->
-  <div class="relative flex-1 w-full h-full overflow-hidden flex items-center justify-center bg-black">
-    
-    <canvas id="recorderCanvas" class="w-full h-full object-contain bg-black"></canvas>
-
-    <!-- CRICCLUBS LIVE SCORECARD OVERLAY CONTAINER -->
-    <!-- Positioned safely in the upper-middle / top quarter so bottom zoom controls & header buttons do NOT overlap -->
-    <div id="overlayWrapper" class="absolute top-16 left-2 right-2 md:left-6 md:right-6 z-20 flex justify-center pointer-events-none transition-all duration-300">
-      <div id="overlayContainer" class="relative w-full max-w-4xl overflow-hidden rounded-xl glass-panel shadow-2xl transition-all duration-300 border border-amber-500/30">
-        <iframe 
-          id="overlayIframe" 
-          src="https://cricclubs.com/nacltennisballcricket/overlay.do?matchId=4608&clubId=27594" 
-          class="w-full h-28 md:h-36 border-0 bg-transparent transition-opacity duration-300" 
-          allowtransparency="true">
-        </iframe>
-      </div>
-    </div>
-
-    <!-- Live Recording Indicator Badge -->
-    <div id="recBadge" class="hidden absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel border-red-500/50 text-xs font-semibold text-red-400">
-      <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-      <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-      <span id="recordingTimer">00:00:00</span>
-      <span id="recResolutionTag" class="text-[10px] text-gray-400 ml-1 border-l border-white/20 pl-2">1080p</span>
-    </div>
-
-    <!-- Status Toast Notification Box -->
-    <div id="toastBox" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-xl glass-panel text-xs text-center border-amber-400/40 text-amber-200 shadow-xl transition-all">
-      <i class="fa-solid fa-circle-info mr-1.5"></i> <span id="toastMessage">Initializing Camera...</span>
-    </div>
-
-    <!-- Top HUD Header Controls Bar -->
-    <div class="absolute top-4 right-4 z-30 flex items-center gap-2">
-      
-      <!-- Overlay Show/Hide Toggle Button -->
-      <button id="toggleOverlayBtn" class="glass-button px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 text-amber-300 border-amber-500/40 shadow-lg">
-        <i id="toggleOverlayIcon" class="fa-solid fa-eye"></i>
-        <span id="toggleOverlayText">Overlay On</span>
-      </button>
-
-      <!-- Overlay URL Settings Trigger -->
-      <button id="openSettingsBtn" class="glass-button p-2.5 rounded-xl text-xs text-gray-200 hover:text-white shadow-lg">
-        <i class="fa-solid fa-gear text-sm"></i>
-      </button>
-
-      <!-- Fullscreen Toggle -->
-      <button id="fullscreenBtn" class="glass-button p-2.5 rounded-xl text-xs text-gray-200 hover:text-white shadow-lg">
-        <i class="fa-solid fa-expand text-sm"></i>
-      </button>
-    </div>
-
-    <!-- Bottom Camera Control Panel (Zoom, Camera Switcher, Rec Button) -->
-    <div class="absolute bottom-4 left-4 right-4 z-30 flex flex-col items-center gap-3">
-      
-      <!-- Zoom Preset Pills & Slider Bar (Positioned distinctly below overlay) -->
-      <div id="zoomControlBar" class="w-full max-w-md glass-panel p-2.5 rounded-2xl flex flex-col gap-2 border-white/10 shadow-2xl">
-        <div class="flex items-center justify-between gap-1.5 text-xs text-gray-300 px-1">
-          <span class="text-[10px] font-mono text-gray-400 flex items-center gap-1">
-            <i class="fa-solid fa-magnifying-glass"></i> <span id="zoomLabel">1.0x</span>
-          </span>
-          
-          <div class="flex items-center gap-1">
-            <button data-zoom="1.0" class="zoom-preset-btn active px-2.5 py-1 rounded-lg text-xs font-semibold glass-button text-amber-400 border-amber-500/50">1x</button>
-            <button data-zoom="2.0" class="zoom-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold glass-button">2x</button>
-            <button data-zoom="4.0" class="zoom-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold glass-button">4x</button>
-            <button data-zoom="6.0" class="zoom-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold glass-button">6x</button>
-            <button data-zoom="10.0" class="zoom-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold glass-button">10x</button>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 px-1">
-          <i class="fa-solid fa-minus text-[10px] text-gray-400"></i>
-          <input id="zoomSlider" type="range" min="1.0" max="10.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-700/80 rounded-lg appearance-none cursor-pointer accent-amber-400" />
-          <i class="fa-solid fa-plus text-[10px] text-gray-400"></i>
-        </div>
-      </div>
-
-      <!-- Main Action Floating Dock -->
-      <div class="w-full max-w-md glass-panel px-4 py-3 rounded-2xl flex items-center justify-between gap-2 shadow-2xl border-white/15">
-        
-        <!-- Lens / Camera Selector Switcher -->
-        <div class="flex items-center gap-2">
-          <button id="switchCameraBtn" class="glass-button p-3 rounded-xl text-gray-200 hover:text-white flex items-center gap-2 text-xs font-medium" title="Switch Rear/Front Camera">
-            <i class="fa-solid fa-camera-rotate text-base text-amber-400"></i>
-            <span id="cameraNameLabel" class="hidden sm:inline text-[11px] text-gray-300">Back Lens</span>
-          </button>
-
-          <!-- Resolution Selector Modal Button -->
-          <select id="resSelector" class="glass-button px-2.5 py-2 rounded-xl text-xs bg-slate-900/80 text-gray-200 border-white/20 focus:outline-none focus:border-amber-400">
-            <option value="1080">1080p FHD</option>
-            <option value="2160">4K UHD</option>
-            <option value="720">720p HD</option>
-          </select>
-        </div>
-
-        <!-- Master Record Button -->
-        <button id="recordToggleBtn" class="relative group p-1 rounded-full flex items-center justify-center focus:outline-none">
-          <div class="w-16 h-16 rounded-full border-4 border-red-500/80 flex items-center justify-center bg-red-950/40 group-active:scale-95 transition-transform">
-            <div id="recordBtnInner" class="w-12 h-12 rounded-full bg-red-600 shadow-lg shadow-red-600/50 transition-all duration-300"></div>
-          </div>
-        </button>
-
-        <!-- FPS Selector Dropdown -->
-        <div class="flex items-center gap-2">
-          <select id="fpsSelector" class="glass-button px-2 py-2 rounded-xl text-xs bg-slate-900/80 text-gray-200 border-white/20 focus:outline-none focus:border-amber-400">
-            <option value="30">30 FPS</option>
-            <option value="60">60 FPS</option>
-          </select>
-
-          <!-- Camera List Drawer Trigger -->
-          <button id="deviceListBtn" class="glass-button p-3 rounded-xl text-gray-200 hover:text-white" title="Choose Specific Camera Lens">
-            <i class="fa-solid fa-sliders text-sm"></i>
-          </button>
-        </div>
-
-      </div>
-
-    </div>
+  <!-- Force Landscape Orientation Notice -->
+  <div id="landscape-warning">
+    <svg viewBox="0 0 24 24">
+      <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+    </svg>
+    <h2>Rotate Device</h2>
+    <p style="color: #94a3b8; margin-top: 8px; font-size: 14px;">
+      Please rotate your screen to Landscape mode to use the match recorder.
+    </p>
   </div>
 
-  <!-- Camera Lens Selection Drawer Modal -->
-  <div id="deviceModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="w-full max-w-md glass-panel p-6 rounded-2xl flex flex-col gap-4 border-white/20 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <h3 class="text-base font-semibold text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-camera"></i> Hardware Lens Selector
-        </h3>
-        <button id="closeDeviceModalBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+  <div id="app-container">
+    <!-- Camera Feed -->
+    <video id="camera-feed" autoplay playsinline muted></video>
+
+    <!-- Top Navigation Control Bar -->
+    <div class="top-bar">
+      <div class="left-controls">
+        <button id="toggle-overlay-btn" class="btn btn-toggle active" onclick="toggleScorecard()">
+          <span>Scorecard: ON</span>
+        </button>
+        <button id="switch-cam-btn" class="btn" onclick="switchCamera()">
+          🔄 Flip Camera
+        </button>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label class="text-xs text-gray-300 font-medium">Select Installed Camera Lens:</label>
-        <select id="cameraDeviceSelect" class="w-full p-3 rounded-xl bg-slate-900 border border-white/20 text-xs text-gray-100 focus:outline-none focus:border-amber-400">
-          <option value="">Auto-Detecting Back Cameras...</option>
-        </select>
-        <p class="text-[11px] text-gray-400 mt-1">
-          <i class="fa-solid fa-circle-info"></i> Select wide, ultra-wide, or telephoto lenses directly if supported by device driver.
-        </p>
-      </div>
-
-      <div class="flex justify-end pt-2">
-        <button id="applyCameraSelectionBtn" class="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-semibold text-xs hover:bg-amber-400 transition-colors">
-          Apply & Load Lens
+      <div class="right-controls">
+        <button id="record-btn" class="record-btn" onclick="toggleRecording()">
+          <span class="rec-dot"></span>
+          <span id="record-text">REC</span>
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- Settings & Custom Overlay URL Modal -->
-  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="w-full max-w-lg glass-panel p-6 rounded-2xl flex flex-col gap-4 border-white/20 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <h3 class="text-base font-semibold text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-gears"></i> Scorecard Overlay Settings
-        </h3>
-        <button id="closeSettingsModalBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-
-      <div class="flex flex-col gap-3">
-        <label class="text-xs text-gray-300 font-medium">Live Scorecard Overlay Source URL:</label>
-        <input 
-          id="overlayUrlInput" 
-          type="url" 
-          value="https://cricclubs.com/nacltennisballcricket/overlay.do?matchId=4608&clubId=27594"
-          placeholder="https://cricclubs.com/..." 
-          class="w-full p-3 rounded-xl bg-slate-900 border border-white/20 text-xs text-gray-100 focus:outline-none focus:border-amber-400 font-mono"
-        />
-        
-        <div class="flex items-center gap-2 mt-1">
-          <input id="overlayVisibilityCheck" type="checkbox" checked class="w-4 h-4 accent-amber-500 rounded cursor-pointer" />
-          <label for="overlayVisibilityCheck" class="text-xs text-gray-200 cursor-pointer">Display overlay over camera stream</label>
-        </div>
-
-        <p class="text-[11px] text-gray-400 border-t border-white/10 pt-2">
-          <i class="fa-solid fa-circle-check text-green-400 mr-1"></i> Default link is initialized to CricClubs live scoring URL. You can switch or temporarily hide it anytime.
-        </p>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <button id="resetOverlayUrlBtn" class="px-4 py-2 rounded-xl border border-white/20 text-xs text-gray-300 hover:bg-white/10">Reset Default</button>
-        <button id="saveSettingsBtn" class="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-semibold text-xs hover:bg-amber-400">Save & Reload</button>
-      </div>
+    <!-- Direct Embedded CricClubs Scorecard Overlay -->
+    <div id="overlay-wrapper">
+      <iframe 
+        id="overlay-frame" 
+        src="https://cricclubs.com/nacltennisballcricket/overlay.do?matchId=4608&clubId=27594"
+        allow="autoplay"
+      ></iframe>
     </div>
-  </div>
 
-  <!-- Video Preview & Export Modal -->
-  <div id="exportModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl glass-panel p-6 rounded-2xl flex flex-col gap-4 border-amber-500/30 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <h3 class="text-base font-semibold text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-video"></i> Recording Complete
-        </h3>
-        <button id="closeExportModalBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-
-      <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
-        <video id="playbackVideo" controls class="w-full h-full object-contain"></video>
-      </div>
-
-      <div class="flex items-center justify-between pt-2">
-        <div class="text-xs text-gray-400">
-          Format: <span class="text-gray-200 font-mono">WebM / H.264</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <button id="discardVideoBtn" class="px-4 py-2 rounded-xl border border-red-500/40 text-xs text-red-400 hover:bg-red-500/10">Discard</button>
-          <a id="downloadVideoBtn" download="cricket_match_recording.webm" class="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-semibold text-xs flex items-center gap-2 hover:bg-amber-400 transition-colors">
-            <i class="fa-solid fa-download"></i> Save Match Video
-          </a>
-        </div>
-      </div>
+    <!-- Bottom Zoom Controls -->
+    <div class="bottom-bar">
+      <button class="zoom-btn active" onclick="setZoom(1, this)">1x</button>
+      <button class="zoom-btn" onclick="setZoom(2, this)">2x</button>
+      <button class="zoom-btn" onclick="setZoom(3, this)">3x</button>
+      <button class="zoom-btn" onclick="setZoom(5, this)">5x</button>
     </div>
   </div>
 
   <script>
-    /* Global Application State Management */
-    const DEFAULT_OVERLAY_URL = "https://cricclubs.com/nacltennisballcricket/overlay.do?matchId=4608&clubId=27594";
+    let videoTrack = null;
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let currentFacingMode = 'environment';
+    let isOverlayVisible = true;
+    let timerInterval = null;
+    let recordSeconds = 0;
 
-    const state = {
-      mediaStream: null,
-      videoTrack: null,
-      mediaRecorder: null,
-      recordedChunks: [],
-      isRecording: false,
-      recordingStartTime: 0,
-      recordingTimerInterval: null,
-      wakeLock: null,
-      
-      // Hardware Camera Parameters
-      selectedDeviceId: null,
-      facingMode: "environment", // Default rear camera
-      currentZoom: 1.0,
-      maxZoom: 10.0,
-      minZoom: 1.0,
-      supportsNativeZoom: false,
-      
-      // Resolution & FPS Settings
-      targetWidth: 1920,
-      targetHeight: 1080,
-      targetFps: 30,
+    const videoEl = document.getElementById('camera-feed');
+    const recordBtn = document.getElementById('record-btn');
+    const recordText = document.getElementById('record-text');
+    const overlayWrapper = document.getElementById('overlay-wrapper');
+    const toggleOverlayBtn = document.getElementById('toggle-overlay-btn');
 
-      // Overlay Display State
-      isOverlayVisible: true,
-      overlayUrl: DEFAULT_OVERLAY_URL
-    };
-
-    /* DOM Element References */
-    const webcamVideo = document.getElementById('webcamVideo');
-    const recorderCanvas = document.getElementById('recorderCanvas');
-    const canvasCtx = recorderCanvas.getContext('2d');
-    
-    const overlayWrapper = document.getElementById('overlayWrapper');
-    const overlayIframe = document.getElementById('overlayIframe');
-    const toggleOverlayBtn = document.getElementById('toggleOverlayBtn');
-    const toggleOverlayIcon = document.getElementById('toggleOverlayIcon');
-    const toggleOverlayText = document.getElementById('toggleOverlayText');
-
-    const zoomSlider = document.getElementById('zoomSlider');
-    const zoomLabel = document.getElementById('zoomLabel');
-    const zoomPresetBtns = document.querySelectorAll('.zoom-preset-btn');
-    const switchCameraBtn = document.getElementById('switchCameraBtn');
-    const cameraNameLabel = document.getElementById('cameraNameLabel');
-    
-    const resSelector = document.getElementById('resSelector');
-    const fpsSelector = document.getElementById('fpsSelector');
-    const recordToggleBtn = document.getElementById('recordToggleBtn');
-    const recordBtnInner = document.getElementById('recordBtnInner');
-    const recBadge = document.getElementById('recBadge');
-    const recordingTimer = document.getElementById('recordingTimer');
-    const recResolutionTag = document.getElementById('recResolutionTag');
-    
-    const toastBox = document.getElementById('toastBox');
-    const toastMessage = document.getElementById('toastMessage');
-
-    const settingsModal = document.getElementById('settingsModal');
-    const openSettingsBtn = document.getElementById('openSettingsBtn');
-    const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
-    const overlayUrlInput = document.getElementById('overlayUrlInput');
-    const overlayVisibilityCheck = document.getElementById('overlayVisibilityCheck');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const resetOverlayUrlBtn = document.getElementById('resetOverlayUrlBtn');
-
-    const deviceModal = document.getElementById('deviceModal');
-    const deviceListBtn = document.getElementById('deviceListBtn');
-    const closeDeviceModalBtn = document.getElementById('closeDeviceModalBtn');
-    const cameraDeviceSelect = document.getElementById('cameraDeviceSelect');
-    const applyCameraSelectionBtn = document.getElementById('applyCameraSelectionBtn');
-
-    const exportModal = document.getElementById('exportModal');
-    const closeExportModalBtn = document.getElementById('closeExportModalBtn');
-    const playbackVideo = document.getElementById('playbackVideo');
-    const downloadVideoBtn = document.getElementById('downloadVideoBtn');
-    const discardVideoBtn = document.getElementById('discardVideoBtn');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-    function showToast(message, duration = 3000) {
-      toastMessage.textContent = message;
-      toastBox.classList.remove('hidden');
-      setTimeout(() => {
-        toastBox.classList.add('hidden');
-      }, duration);
-    }
-
-    /* Set Canvas Dimensions dynamically to match stream */
-    function setupCanvasDimensions(width, height) {
-      recorderCanvas.width = width;
-      recorderCanvas.height = height;
-    }
-
-    /**
-     * Camera constraint fallback cascade tailored for iOS WebKit & Android Chrome
-     */
     async function initCamera() {
-      showToast("Accessing rear camera lens...");
-
-      // Stop any existing tracks
-      if (state.mediaStream) {
-        state.mediaStream.getTracks().forEach(track => track.stop());
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
       }
 
-      let constraints = null;
-
-      // 1. If specific camera device ID is chosen by user
-      if (state.selectedDeviceId) {
-        constraints = {
-          video: {
-            deviceId: { exact: state.selectedDeviceId },
-            width: { ideal: state.targetWidth },
-            height: { ideal: state.targetHeight },
-            frameRate: { ideal: state.targetFps }
-          },
-          audio: true
-        };
-      } else {
-        // 2. Try exact back/environment camera constraint first
-        constraints = {
-          video: {
-            facingMode: { exact: state.facingMode },
-            width: { ideal: state.targetWidth },
-            height: { ideal: state.targetHeight },
-            frameRate: { ideal: state.targetFps }
-          },
-          audio: true
-        };
-      }
+      const constraints = {
+        video: {
+          facingMode: { ideal: currentFacingMode },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: true
+      };
 
       try {
-        state.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoEl.srcObject = mediaStream;
+        videoTrack = mediaStream.getVideoTracks()[0];
       } catch (err) {
-        console.warn("Exact facingMode failed, attempting fallback ideal mode...", err);
-        
-        // 3. Fallback to ideal facingMode for broader iOS compatibility
-        try {
-          constraints = {
-            video: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: state.targetWidth },
-              height: { ideal: state.targetHeight },
-              frameRate: { ideal: state.targetFps }
-            },
-            audio: true
-          };
-          state.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (fallbackErr) {
-          console.error("All camera constraints failed:", fallbackErr);
-          showToast("Camera access error. Re-trying basic video...");
-          
-          // 4. Ultimate fallback to basic video
-          constraints = { video: true, audio: true };
-          state.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        }
-      }
-
-      webcamVideo.srcObject = state.mediaStream;
-      await webcamVideo.play();
-
-      state.videoTrack = state.mediaStream.getVideoTracks()[0];
-      const settings = state.videoTrack.getSettings();
-      
-      setupCanvasDimensions(settings.width || 1920, settings.height || 1080);
-      recResolutionTag.textContent = `${settings.height || 1080}p`;
-
-      // Check native zoom support
-      detectZoomCapabilities();
-
-      // Enumerate available camera devices for selector
-      await populateCameraDeviceList();
-
-      showToast("Camera active");
-    }
-
-    function detectZoomCapabilities() {
-      if (!state.videoTrack) return;
-
-      const capabilities = state.videoTrack.getCapabilities ? state.videoTrack.getCapabilities() : {};
-      
-      if (capabilities.zoom) {
-        state.supportsNativeZoom = true;
-        state.minZoom = capabilities.zoom.min || 1.0;
-        state.maxZoom = Math.min(capabilities.zoom.max || 10.0, 10.0);
-        
-        zoomSlider.min = state.minZoom;
-        zoomSlider.max = state.maxZoom;
-        zoomSlider.step = capabilities.zoom.step || 0.1;
-      } else {
-        state.supportsNativeZoom = false;
-        state.minZoom = 1.0;
-        state.maxZoom = 10.0;
-        zoomSlider.min = 1.0;
-        zoomSlider.max = 10.0;
-        zoomSlider.step = 0.1;
-      }
-
-      applyZoom(state.currentZoom);
-    }
-
-    async function applyZoom(zoomValue) {
-      state.currentZoom = parseFloat(zoomValue);
-      zoomLabel.textContent = `${state.currentZoom.toFixed(1)}x`;
-      zoomSlider.value = state.currentZoom;
-
-      // Highlight active preset button
-      zoomPresetBtns.forEach(btn => {
-        const btnZoom = parseFloat(btn.dataset.zoom);
-        if (Math.abs(btnZoom - state.currentZoom) < 0.2) {
-          btn.classList.add('active', 'text-amber-400', 'border-amber-500/50');
-        } else {
-          btn.classList.remove('active', 'text-amber-400', 'border-amber-500/50');
-        }
-      });
-
-      // Apply native optical/hardware zoom if driver allows
-      if (state.supportsNativeZoom && state.videoTrack) {
-        try {
-          await state.videoTrack.applyConstraints({
-            advanced: [{ zoom: state.currentZoom }]
-          });
-        } catch (e) {
-          console.warn("Hardware zoom application failed, relying on canvas digital zoom:", e);
-        }
+        alert('Could not access camera hardware: ' + err.message);
       }
     }
 
-    async function populateCameraDeviceList() {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
-        cameraDeviceSelect.innerHTML = '';
-        
-        videoDevices.forEach((device, index) => {
-          const option = document.createElement('option');
-          option.value = device.deviceId;
-          option.textContent = device.label || `Camera Lens ${index + 1} (${device.deviceId.slice(0, 5)}...)`;
-          if (state.selectedDeviceId === device.deviceId) {
-            option.selected = true;
-          }
-          cameraDeviceSelect.appendChild(option);
-        });
-      } catch (err) {
-        console.error("Error enumerating devices:", err);
-      }
+    async function switchCamera() {
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      await initCamera();
     }
 
-    function renderCanvasFrame() {
-      if (webcamVideo.readyState >= webcamVideo.HAVE_CURRENT_DATA) {
-        const canvasWidth = recorderCanvas.width;
-        const canvasHeight = recorderCanvas.height;
-
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        // Calculate digital zoom cropping box if native zoom isn't fully supported
-        const zoom = state.supportsNativeZoom ? 1.0 : state.currentZoom;
-        
-        const sw = webcamVideo.videoWidth / zoom;
-        const sh = webcamVideo.videoHeight / zoom;
-        const sx = (webcamVideo.videoWidth - sw) / 2;
-        const sy = (webcamVideo.videoHeight - sh) / 2;
-
-        // Render live video feed to canvas
-        canvasCtx.drawImage(
-          webcamVideo,
-          sx, sy, sw, sh,
-          0, 0, canvasWidth, canvasHeight
-        );
-
-        canvasCtx.restore();
-      }
-
-      requestAnimationFrame(renderCanvasFrame);
-    }
-
-    function setOverlayVisibility(visible) {
-      state.isOverlayVisible = visible;
-      overlayVisibilityCheck.checked = visible;
-
-      if (visible) {
+    function toggleScorecard() {
+      isOverlayVisible = !isOverlayVisible;
+      if (isOverlayVisible) {
         overlayWrapper.classList.remove('hidden');
-        toggleOverlayIcon.className = "fa-solid fa-eye";
-        toggleOverlayText.textContent = "Overlay On";
-        toggleOverlayBtn.classList.remove('text-gray-400', 'border-gray-500/40');
-        toggleOverlayBtn.classList.add('text-amber-300', 'border-amber-500/40');
-        showToast("Scorecard Overlay Shown");
+        toggleOverlayBtn.classList.remove('inactive');
+        toggleOverlayBtn.classList.add('active');
+        toggleOverlayBtn.querySelector('span').innerText = 'Scorecard: ON';
       } else {
         overlayWrapper.classList.add('hidden');
-        toggleOverlayIcon.className = "fa-solid fa-eye-slash";
-        toggleOverlayText.textContent = "Overlay Off";
-        toggleOverlayBtn.classList.remove('text-amber-300', 'border-amber-500/40');
-        toggleOverlayBtn.classList.add('text-gray-400', 'border-gray-500/40');
-        showToast("Scorecard Overlay Hidden");
+        toggleOverlayBtn.classList.remove('active');
+        toggleOverlayBtn.classList.add('inactive');
+        toggleOverlayBtn.querySelector('span').innerText = 'Scorecard: OFF';
       }
     }
 
-    function updateOverlayUrl(url) {
-      state.overlayUrl = url || DEFAULT_OVERLAY_URL;
-      overlayIframe.src = state.overlayUrl;
-      overlayUrlInput.value = state.overlayUrl;
-    }
+    async function setZoom(zoomValue, btnElement) {
+      document.querySelectorAll('.zoom-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
 
-    async function startRecording() {
-      state.recordedChunks = [];
+      if (!videoTrack) return;
+      const capabilities = videoTrack.getCapabilities();
 
-      // Capture 60 FPS stream from canvas
-      const canvasStream = recorderCanvas.captureStream(state.targetFps);
-
-      // Include audio tracks from main camera stream
-      if (state.mediaStream && state.mediaStream.getAudioTracks().length > 0) {
-        canvasStream.addTrack(state.mediaStream.getAudioTracks()[0]);
-      }
-
-      let options = { mimeType: 'video/webm;codecs=vp9,opus' };
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options = { mimeType: 'video/webm;codecs=vp8,opus' };
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-          options = { mimeType: 'video/webm' };
+      if (capabilities.zoom) {
+        try {
+          const targetZoom = Math.min(Math.max(zoomValue, capabilities.zoom.min), capabilities.zoom.max);
+          await videoTrack.applyConstraints({ advanced: [{ zoom: targetZoom }] });
+        } catch (e) {
+          console.error('Hardware zoom error:', e);
         }
+      } else {
+        videoEl.style.transform = `scale(${zoomValue})`;
+        videoEl.style.transformOrigin = 'center center';
       }
+    }
 
+    function toggleRecording() {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    }
+
+    function startRecording() {
+      recordedChunks = [];
+      const options = { mimeType: 'video/webm;codecs=vp9' };
+      
       try {
-        state.mediaRecorder = new MediaRecorder(canvasStream, options);
+        mediaRecorder = new MediaRecorder(mediaStream, options);
       } catch (e) {
-        console.error("MediaRecorder creation failed:", e);
-        showToast("Recording failed to start.");
-        return;
+        mediaRecorder = new MediaRecorder(mediaStream);
       }
 
-      state.mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          state.recordedChunks.push(event.data);
-        }
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
       };
 
-      state.mediaRecorder.onstop = () => {
-        const blob = new Blob(state.recordedChunks, { type: 'video/webm' });
-        const videoUrl = URL.createObjectURL(blob);
-        playbackVideo.src = videoUrl;
-        downloadVideoBtn.href = videoUrl;
-        exportModal.classList.remove('hidden');
-      };
+      mediaRecorder.onstop = exportVideo;
+      mediaRecorder.start(1000);
 
-      state.mediaRecorder.start(1000); // 1-second chunks
-      state.isRecording = true;
-      state.recordingStartTime = Date.now();
-
-      // UI updates for recording state
-      recordBtnInner.classList.remove('bg-red-600', 'rounded-full');
-      recordBtnInner.classList.add('bg-red-500', 'rounded-md', 'scale-75', 'recording-pulse');
-      recBadge.classList.remove('hidden');
-
-      // Request screen WakeLock during match recording
-      if ('wakeLock' in navigator) {
-        try { state.wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
-      }
-
-      state.recordingTimerInterval = setInterval(updateRecordingTimer, 1000);
-      showToast("Recording Started");
+      isRecording = true;
+      recordBtn.classList.add('recording');
+      
+      recordSeconds = 0;
+      timerInterval = setInterval(() => {
+        recordSeconds++;
+        const hrs = String(Math.floor(recordSeconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((recordSeconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(recordSeconds % 60).padStart(2, '0');
+        recordText.innerText = `${hrs}:${mins}:${secs}`;
+      }, 1000);
     }
 
     function stopRecording() {
-      if (!state.isRecording) return;
-
-      state.mediaRecorder.stop();
-      state.isRecording = false;
-
-      clearInterval(state.recordingTimerInterval);
-      if (state.wakeLock) {
-        state.wakeLock.release().then(() => { state.wakeLock = null; });
-      }
-
-      // Restore record button UI
-      recordBtnInner.classList.remove('bg-red-500', 'rounded-md', 'scale-75', 'recording-pulse');
-      recordBtnInner.classList.add('bg-red-600', 'rounded-full');
-      recBadge.classList.add('hidden');
-
-      showToast("Recording Stopped");
+      if (mediaRecorder) mediaRecorder.stop();
+      isRecording = false;
+      recordBtn.classList.remove('recording');
+      clearInterval(timerInterval);
+      recordText.innerText = 'REC';
     }
 
-    function updateRecordingTimer() {
-      const elapsedMs = Date.now() - state.recordingStartTime;
-      const totalSecs = Math.floor(elapsedMs / 1000);
-      const hrs = String(Math.floor(totalSecs / 3600)).padStart(2, '0');
-      const mins = String(Math.floor((totalSecs % 3600) / 60)).padStart(2, '0');
-      const secs = String(totalSecs % 60).padStart(2, '0');
-      recordingTimer.textContent = `${hrs}:${mins}:${secs}`;
+    function exportVideo() {
+      const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Cricket_Match_${new Date().toISOString().slice(0,10)}.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
-    window.addEventListener('load', () => {
-      // Initialize Camera
+    window.addEventListener('DOMContentLoaded', () => {
       initCamera();
-      
-      // Start Canvas Render Loop
-      requestAnimationFrame(renderCanvasFrame);
-
-      // Quick Overlay Toggle Button
-      toggleOverlayBtn.addEventListener('click', () => {
-        setOverlayVisibility(!state.isOverlayVisible);
-      });
-
-      // Zoom Controls
-      zoomSlider.addEventListener('input', (e) => {
-        applyZoom(e.target.value);
-      });
-
-      zoomPresetBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          applyZoom(btn.dataset.zoom);
-        });
-      });
-
-      // Switch Rear/Front Facing Mode
-      switchCameraBtn.addEventListener('click', () => {
-        state.selectedDeviceId = null; // Clear manual lens selection
-        state.facingMode = state.facingMode === "environment" ? "user" : "environment";
-        cameraNameLabel.textContent = state.facingMode === "environment" ? "Back Lens" : "Front Lens";
-        initCamera();
-      });
-
-      // Resolution & FPS
-      resSelector.addEventListener('change', (e) => {
-        state.targetHeight = parseInt(e.target.value);
-        state.targetWidth = state.targetHeight === 2160 ? 3840 : (state.targetHeight === 1080 ? 1920 : 1280);
-        initCamera();
-      });
-
-      fpsSelector.addEventListener('change', (e) => {
-        state.targetFps = parseInt(e.target.value);
-        initCamera();
-      });
-
-      // Master Record Toggle Button
-      recordToggleBtn.addEventListener('click', () => {
-        if (state.isRecording) {
-          stopRecording();
-        } else {
-          startRecording();
-        }
-      });
-
-      // Settings Modal
-      openSettingsBtn.addEventListener('click', () => {
-        overlayUrlInput.value = state.overlayUrl;
-        overlayVisibilityCheck.checked = state.isOverlayVisible;
-        settingsModal.classList.remove('hidden');
-      });
-
-      closeSettingsModalBtn.addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-      });
-
-      saveSettingsBtn.addEventListener('click', () => {
-        updateOverlayUrl(overlayUrlInput.value);
-        setOverlayVisibility(overlayVisibilityCheck.checked);
-        settingsModal.classList.add('hidden');
-      });
-
-      resetOverlayUrlBtn.addEventListener('click', () => {
-        updateOverlayUrl(DEFAULT_OVERLAY_URL);
-      });
-
-      // Hardware Device Selector Modal
-      deviceListBtn.addEventListener('click', () => {
-        deviceModal.classList.remove('hidden');
-      });
-
-      closeDeviceModalBtn.addEventListener('click', () => {
-        deviceModal.classList.add('hidden');
-      });
-
-      applyCameraSelectionBtn.addEventListener('click', () => {
-        state.selectedDeviceId = cameraDeviceSelect.value;
-        deviceModal.classList.add('hidden');
-        initCamera();
-      });
-
-      // Export Modal Controls
-      closeExportModalBtn.addEventListener('click', () => exportModal.classList.add('hidden'));
-      discardVideoBtn.addEventListener('click', () => exportModal.classList.add('hidden'));
-
-      // Fullscreen Mode
-      fullscreenBtn.addEventListener('click', () => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(err => {});
-        } else {
-          document.exitFullscreen().catch(err => {});
-        }
-      });
     });
   </script>
 </body>
