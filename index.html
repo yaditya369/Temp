@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cricket Match Recorder</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -18,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #000;
+      background-color: #0b0f19;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: #fff;
     }
@@ -30,47 +29,113 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #000;
+      background-color: #0b0f19;
       overflow: hidden;
     }
 
+    /* Video Feed Styling */
     video {
       position: absolute;
-      width: 100%;
-      height: 100%;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
       background: #000;
-      transition: transform 0.1s ease-out;
+      z-index: 1;
     }
 
-    /* Glassmorphism Controls */
-    .glass-btn {
+    /* On-Screen Status / Error Banner */
+    #status-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 14px;
+      color: #cbd5e1;
+      max-width: 85%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #status-msg.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .top-bar > * {
+      pointer-events: auto;
+    }
+
+    .left-controls, .right-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn, select.btn {
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 8px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       backdrop-filter: blur(8px);
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      gap: 6px;
       outline: none;
     }
 
-    .glass-btn:active {
+    .btn-icon {
+      padding: 8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+    }
+
+    .btn-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+    }
+
+    .btn:active {
       transform: scale(0.95);
     }
 
-    .glass-btn.active {
+    .btn-toggle.active {
       background: rgba(16, 185, 129, 0.85);
       border-color: #34d399;
     }
 
-    .glass-btn.inactive {
+    .btn-toggle.inactive {
       background: rgba(239, 68, 68, 0.85);
       border-color: #f87171;
     }
@@ -85,7 +150,7 @@
       font-size: 13px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
       cursor: pointer;
     }
@@ -108,79 +173,36 @@
       100% { opacity: 1; }
     }
 
-    /* Adaptive Overlay Layout for Portrait & Landscape */
+    /* Scorecard Overlay Box */
     #overlay-wrapper {
       position: absolute;
-      z-index: 30;
+      z-index: 50;
       border-radius: 10px;
       overflow: hidden;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       transition: all 0.3s ease;
     }
 
-    /* Landscape Layout */
+    /* Landscape Scorecard Positioning */
     @media (orientation: landscape) {
-      .top-bar {
-        position: absolute;
-        top: 12px;
-        left: 16px;
-        right: 16px;
-        height: 48px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 50;
-      }
       #overlay-wrapper {
-        top: 68px;
-        left: 16px;
-        width: clamp(320px, 45vw, 550px);
-        height: 125px;
-      }
-      .bottom-bar {
-        position: absolute;
-        bottom: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 50;
+        top: 64px;
+        left: 12px;
+        width: clamp(320px, 40vw, 550px);
+        height: 120px;
       }
     }
 
-    /* Portrait Layout */
+    /* Portrait Scorecard Positioning */
     @media (orientation: portrait) {
-      .top-bar {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        right: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        z-index: 50;
-      }
-      .top-controls-row {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
       #overlay-wrapper {
-        top: 110px;
-        left: 12px;
-        right: 12px;
-        width: calc(100vw - 24px);
-        height: 120px;
-      }
-      .bottom-bar {
-        position: absolute;
-        bottom: 20px;
+        top: 68px;
         left: 50%;
         transform: translateX(-50%);
         width: calc(100vw - 24px);
-        justify-content: center;
-        z-index: 50;
+        height: 110px;
       }
     }
 
@@ -195,9 +217,14 @@
       background: transparent;
     }
 
-    /* Bottom Zoom Bar */
+    /* Bottom Control Bar - Zoom Options + Slider */
     .bottom-bar {
-      background: rgba(15, 23, 42, 0.88);
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 30px;
       padding: 6px 14px;
@@ -205,6 +232,8 @@
       align-items: center;
       gap: 10px;
       backdrop-filter: blur(8px);
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
     }
 
     .zoom-presets {
@@ -216,7 +245,7 @@
       background: transparent;
       border: none;
       color: rgba(255, 255, 255, 0.7);
-      padding: 5px 10px;
+      padding: 6px 10px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 700;
@@ -231,7 +260,7 @@
     .zoom-slider-container {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       border-left: 1px solid rgba(255, 255, 255, 0.2);
       padding-left: 10px;
     }
@@ -249,8 +278,8 @@
     .zoom-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: #38bdf8;
       cursor: pointer;
@@ -258,8 +287,8 @@
     }
 
     .zoom-slider::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: #38bdf8;
       cursor: pointer;
@@ -267,73 +296,68 @@
     }
 
     #zoom-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       color: #38bdf8;
-      min-width: 30px;
-    }
-
-    /* Orientation Badge */
-    #mode-indicator {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #cbd5e1;
+      min-width: 32px;
     }
   </style>
 </head>
 <body>
 
   <div id="app-container">
-    <!-- Camera Preview Element -->
+    <!-- Camera Feed -->
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <!-- Top Controls Container -->
+    <!-- On-screen Camera Status Message -->
+    <div id="status-msg">Requesting camera access...</div>
+
+    <!-- Top Controls Bar -->
     <div class="top-bar">
-      <div class="top-controls-row flex items-center justify-between w-full">
-        <div class="flex items-center gap-2 flex-wrap">
-          <!-- Toggle Scorecard Overlay -->
-          <button id="toggle-overlay-btn" class="glass-btn active" onclick="toggleScorecard()">
-            <span>Scorecard: ON</span>
-          </button>
+      <div class="left-controls">
+        <!-- Toggle Scorecard ON/OFF -->
+        <button id="toggle-overlay-btn" class="btn btn-toggle active" onclick="toggleScorecard()">
+          <span>Scorecard: ON</span>
+        </button>
 
-          <!-- Camera Lens Switcher -->
-          <select id="camera-select" class="glass-btn" onchange="changeCamera(this.value)">
-            <option value="environment">Back Lens</option>
-            <option value="user">Front Lens</option>
-          </select>
+        <!-- Lens / Camera Device Selection Dropdown -->
+        <select id="camera-select" class="btn" onchange="changeCameraDevice(this.value)">
+          <option value="environment">Back Camera</option>
+          <option value="user">Front Camera</option>
+        </select>
 
-          <!-- Resolution Selector -->
-          <select id="resolution-select" class="glass-btn" onchange="changeResolution(this.value)">
-            <option value="1080">1080p (FHD)</option>
-            <option value="720">720p (HD)</option>
-            <option value="2160">4K (UHD)</option>
-          </select>
+        <!-- Flip Camera Quick Icon Button -->
+        <button class="btn btn-icon" onclick="switchCameraLens()" title="Quick Switch Lens">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+          </svg>
+        </button>
 
-          <!-- Frame Rate (FPS) Selector -->
-          <select id="fps-select" class="glass-btn" onchange="changeFPS(this.value)">
-            <option value="30">30 FPS</option>
-            <option value="60">60 FPS</option>
-            <option value="24">24 FPS</option>
-          </select>
+        <!-- Resolution Selector -->
+        <select id="resolution-select" class="btn" onchange="changeResolution(this.value)">
+          <option value="1080">1080p</option>
+          <option value="720">720p</option>
+          <option value="2160">4K</option>
+        </select>
 
-          <span id="mode-indicator">LANDSCAPE</span>
-        </div>
+        <!-- FPS Selector -->
+        <select id="fps-select" class="btn" onchange="changeFPS(this.value)">
+          <option value="30">30 FPS</option>
+          <option value="60">60 FPS</option>
+          <option value="24">24 FPS</option>
+        </select>
+      </div>
 
-        <div class="flex items-center gap-2">
-          <!-- Record Button -->
-          <button id="record-btn" class="record-btn" onclick="toggleRecording()">
-            <span class="rec-dot"></span>
-            <span id="record-text">REC</span>
-          </button>
-        </div>
+      <div class="right-controls">
+        <!-- Record Button -->
+        <button id="record-btn" class="record-btn" onclick="toggleRecording()">
+          <span class="rec-dot"></span>
+          <span id="record-text">REC</span>
+        </button>
       </div>
     </div>
 
-    <!-- CricClubs Scorecard Iframe Overlay -->
+    <!-- Embedded Scorecard Overlay -->
     <div id="overlay-wrapper">
       <iframe 
         id="overlay-frame" 
@@ -342,7 +366,7 @@
       ></iframe>
     </div>
 
-    <!-- Bottom Zoom Control Bar -->
+    <!-- Bottom Zoom Controls: Presets (1x, 2x, 4x, 5x, 10x) + Slider -->
     <div class="bottom-bar">
       <div class="zoom-presets">
         <button class="zoom-btn active" data-zoom="1" onclick="applyZoom(1, this)">1x</button>
@@ -375,52 +399,58 @@
     let recordedChunks = [];
     let isRecording = false;
     let currentFacingMode = 'environment';
+    let currentDeviceId = null;
     let currentResHeight = 1080;
-    let currentFPS = 30;
+    let currentFps = 30;
     let isOverlayVisible = true;
     let timerInterval = null;
     let recordSeconds = 0;
     let currentZoom = 1;
 
     const videoEl = document.getElementById('camera-feed');
+    const statusMsg = document.getElementById('status-msg');
     const recordBtn = document.getElementById('record-btn');
     const recordText = document.getElementById('record-text');
     const overlayWrapper = document.getElementById('overlay-wrapper');
     const toggleOverlayBtn = document.getElementById('toggle-overlay-btn');
+    const cameraSelect = document.getElementById('camera-select');
     const zoomSlider = document.getElementById('zoom-slider');
     const zoomLabel = document.getElementById('zoom-label');
-    const modeIndicator = document.getElementById('mode-indicator');
 
-    // Detect Orientation Changes
-    function checkOrientation() {
-      const isPortrait = window.innerHeight > window.innerWidth;
-      modeIndicator.innerText = isPortrait ? 'PORTRAIT' : 'LANDSCAPE';
-    }
-    window.addEventListener('resize', checkOrientation);
-
-    // Hardware Lens Enumeration
-    async function enumerateDevices() {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        const selectEl = document.getElementById('camera-select');
-        
-        if (videoDevices.length > 2) {
-          selectEl.innerHTML = '';
-          videoDevices.forEach((device, idx) => {
-            const opt = document.createElement('option');
-            opt.value = device.deviceId;
-            opt.innerText = device.label || `Lens ${idx + 1}`;
-            selectEl.appendChild(opt);
-          });
-        }
-      } catch (e) {
-        console.log('Device enumeration error:', e);
+    function updateStatus(message, isError = false) {
+      if (!message) {
+        statusMsg.classList.add('hidden');
+      } else {
+        statusMsg.innerText = message;
+        statusMsg.style.color = isError ? '#f87171' : '#cbd5e1';
+        statusMsg.classList.remove('hidden');
       }
     }
 
-    // Initialize Camera Stream with Resolution, FPS, and Lens constraints
-    async function initCamera(deviceIdOrFacing) {
+    async function enumerateDevices() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        
+        if (videoDevices.length > 0) {
+          cameraSelect.innerHTML = '';
+          videoDevices.forEach((device, idx) => {
+            const opt = document.createElement('option');
+            opt.value = device.deviceId;
+            opt.innerText = device.label || `Camera Lens ${idx + 1}`;
+            if (currentDeviceId === device.deviceId) opt.selected = true;
+            cameraSelect.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.warn('Device enumeration error:', e);
+      }
+    }
+
+    async function initCamera() {
+      updateStatus('Initializing camera...');
+
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
@@ -428,54 +458,77 @@
       const videoConstraints = {
         height: { ideal: currentResHeight },
         width: { ideal: Math.round(currentResHeight * (16 / 9)) },
-        frameRate: { ideal: currentFPS, max: currentFPS }
+        frameRate: { ideal: currentFps }
       };
 
-      if (deviceIdOrFacing === 'user' || deviceIdOrFacing === 'environment') {
-        videoConstraints.facingMode = { ideal: deviceIdOrFacing };
-      } else if (deviceIdOrFacing) {
-        videoConstraints.deviceId = { exact: deviceIdOrFacing };
+      if (currentDeviceId) {
+        videoConstraints.deviceId = { exact: currentDeviceId };
       } else {
-        videoConstraints.facingMode = { ideal: 'environment' };
+        videoConstraints.facingMode = { ideal: currentFacingMode };
       }
 
       try {
+        // First try with ideal settings
         mediaStream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints,
           audio: true
         });
-        videoEl.srcObject = mediaStream;
-        videoTrack = mediaStream.getVideoTracks()[0];
-        
-        // Detect hardware zoom limits if supported
-        if (videoTrack) {
-          const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+      } catch (err) {
+        console.warn('Primary camera request failed, retrying basic fallback:', err);
+        try {
+          // Fallback to basic video without specific resolution/FPS constraints
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+        } catch (e) {
+          console.error('Camera access failed completely:', e);
+          updateStatus('Camera Access Denied or Unavailable. Please grant permission and refresh.', true);
+          return;
+        }
+      }
+
+      // Attach media stream
+      videoEl.srcObject = mediaStream;
+      videoTrack = mediaStream.getVideoTracks()[0];
+      
+      if (videoTrack) {
+        const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
+        if (settings.deviceId) currentDeviceId = settings.deviceId;
+
+        if (typeof videoTrack.getCapabilities === 'function') {
+          const capabilities = videoTrack.getCapabilities();
           if (capabilities.zoom) {
             zoomSlider.min = capabilities.zoom.min || 1;
             zoomSlider.max = Math.min(capabilities.zoom.max || 10, 10);
           }
         }
-
-        enumerateDevices();
-        applyZoom(currentZoom);
-      } catch (err) {
-        alert('Camera Access Error: ' + err.message);
       }
+
+      updateStatus(null); // Hide status banner on success
+      await enumerateDevices();
+      applyZoom(currentZoom);
     }
 
-    function changeCamera(val) {
-      currentFacingMode = val;
-      initCamera(val);
+    function changeCameraDevice(deviceId) {
+      currentDeviceId = deviceId;
+      initCamera();
+    }
+
+    function switchCameraLens() {
+      currentDeviceId = null;
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      initCamera();
     }
 
     function changeResolution(val) {
       currentResHeight = parseInt(val);
-      initCamera(currentFacingMode);
+      initCamera();
     }
 
     function changeFPS(val) {
-      currentFPS = parseInt(val);
-      initCamera(currentFacingMode);
+      currentFps = parseInt(val);
+      initCamera();
     }
 
     function toggleScorecard() {
@@ -493,7 +546,6 @@
       }
     }
 
-    // Zoom Handling (Hardware + CSS Fallback)
     async function applyZoom(val, btnElement = null) {
       currentZoom = parseFloat(val);
       zoomSlider.value = currentZoom;
@@ -509,14 +561,16 @@
       });
 
       if (!videoTrack) return;
-      const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+      const capabilities = (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : {};
 
       if (capabilities.zoom) {
         try {
           const targetZoom = Math.min(Math.max(currentZoom, capabilities.zoom.min), capabilities.zoom.max);
           await videoTrack.applyConstraints({ advanced: [{ zoom: targetZoom }] });
+          videoEl.style.transform = 'none';
         } catch (e) {
-          console.error('Hardware zoom error:', e);
+          videoEl.style.transform = `scale(${currentZoom})`;
+          videoEl.style.transformOrigin = 'center center';
         }
       } else {
         videoEl.style.transform = `scale(${currentZoom})`;
@@ -528,7 +582,6 @@
       applyZoom(val);
     }
 
-    // Recording Controls
     function toggleRecording() {
       if (!isRecording) {
         startRecording();
@@ -538,13 +591,22 @@
     }
 
     function startRecording() {
+      if (!mediaStream) {
+        alert('No active camera stream available to record.');
+        return;
+      }
       recordedChunks = [];
       const options = { mimeType: 'video/webm;codecs=vp9' };
       
       try {
         mediaRecorder = new MediaRecorder(mediaStream, options);
       } catch (e) {
-        mediaRecorder = new MediaRecorder(mediaStream);
+        try {
+          mediaRecorder = new MediaRecorder(mediaStream);
+        } catch (err) {
+          alert('Recording is not supported on this browser/device.');
+          return;
+        }
       }
 
       mediaRecorder.ondataavailable = (e) => {
@@ -568,7 +630,9 @@
     }
 
     function stopRecording() {
-      if (mediaRecorder) mediaRecorder.stop();
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
       isRecording = false;
       recordBtn.classList.remove('recording');
       clearInterval(timerInterval);
@@ -576,6 +640,7 @@
     }
 
     function exportVideo() {
+      if (recordedChunks.length === 0) return;
       const blob = new Blob(recordedChunks, { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -586,8 +651,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      checkOrientation();
-      initCamera('environment');
+      initCamera();
     });
   </script>
 </body>
