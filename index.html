@@ -17,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0b0f19;
+      background-color: #000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: #fff;
     }
@@ -29,59 +29,30 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #0b0f19;
-      overflow: hidden;
+      background-color: #000;
     }
 
-    /* Video Feed Styling */
     video {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       background: #000;
       z-index: 1;
     }
 
-    /* On-Screen Status / Error Banner */
-    #status-msg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 5;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 16px 24px;
-      border-radius: 12px;
-      text-align: center;
-      font-size: 14px;
-      color: #cbd5e1;
-      max-width: 85%;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(8px);
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    #status-msg.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* Top Control Bar */
+    /* Top Control Bar with Zoom Controls Included */
     .top-bar {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       z-index: 100;
       pointer-events: none;
+      gap: 8px;
     }
 
     .top-bar > * {
@@ -90,7 +61,7 @@
 
     .left-controls, .right-controls {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -99,9 +70,9 @@
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       backdrop-filter: blur(8px);
@@ -109,20 +80,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
       outline: none;
     }
 
     .btn-icon {
-      padding: 8px;
-      width: 38px;
-      height: 38px;
+      padding: 6px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
     }
 
     .btn-icon svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       fill: #fff;
     }
 
@@ -140,18 +111,86 @@
       border-color: #f87171;
     }
 
+    /* Top Bar Integrated Zoom Bar */
+    .zoom-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 4px 8px;
+      backdrop-filter: blur(8px);
+    }
+
+    .zoom-presets {
+      display: flex;
+      gap: 2px;
+    }
+
+    .zoom-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 4px 6px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .zoom-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .zoom-slider-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      padding-left: 6px;
+    }
+
+    .zoom-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 70px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+    }
+
+    #zoom-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      min-width: 28px;
+    }
+
     .record-btn {
       background: #ef4444;
       color: #fff;
       border: none;
-      padding: 8px 16px;
+      padding: 6px 14px;
       border-radius: 20px;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+      gap: 6px;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
       cursor: pointer;
     }
 
@@ -161,8 +200,8 @@
     }
 
     .rec-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       background: #fff;
       border-radius: 50%;
     }
@@ -176,8 +215,8 @@
     /* Scorecard Overlay Box */
     #overlay-wrapper {
       position: absolute;
-      z-index: 50;
-      border-radius: 10px;
+      z-index: 30;
+      border-radius: 8px;
       overflow: hidden;
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -185,23 +224,25 @@
       transition: all 0.3s ease;
     }
 
-    /* Landscape Scorecard Positioning */
+    /* Landscape Scorecard Positioning and Scaling */
     @media (orientation: landscape) {
       #overlay-wrapper {
-        top: 64px;
-        left: 12px;
-        width: clamp(320px, 40vw, 550px);
-        height: 120px;
+        top: 54px;
+        left: 10px;
+        width: 480px;
+        height: 140px;
+        transform-origin: top left;
+        transform: scale(0.85);
       }
     }
 
     /* Portrait Scorecard Positioning */
     @media (orientation: portrait) {
       #overlay-wrapper {
-        top: 68px;
+        top: 90px;
         left: 50%;
         transform: translateX(-50%);
-        width: calc(100vw - 24px);
+        width: calc(100vw - 20px);
         height: 110px;
       }
     }
@@ -217,89 +258,18 @@
       background: transparent;
     }
 
-    /* Bottom Control Bar - Zoom Options + Slider */
-    .bottom-bar {
+    #status-banner {
       position: absolute;
-      bottom: 16px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 90;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 30px;
-      padding: 6px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(8px);
-      max-width: calc(100vw - 24px);
-      overflow-x: auto;
-    }
-
-    .zoom-presets {
-      display: flex;
-      gap: 4px;
-    }
-
-    .zoom-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.7);
-      padding: 6px 10px;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 6px 16px;
       border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .zoom-btn.active {
-      background: #38bdf8;
-      color: #0f172a;
-    }
-
-    .zoom-slider-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-left: 1px solid rgba(255, 255, 255, 0.2);
-      padding-left: 10px;
-    }
-
-    .zoom-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 90px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 2px;
-      outline: none;
-    }
-
-    .zoom-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #38bdf8;
-      cursor: pointer;
-      box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
-    }
-
-    .zoom-slider::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #38bdf8;
-      cursor: pointer;
-      border: none;
-    }
-
-    #zoom-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #38bdf8;
-      min-width: 32px;
+      font-size: 11px;
+      color: #aaa;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -309,9 +279,6 @@
     <!-- Camera Feed -->
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <!-- On-screen Camera Status Message -->
-    <div id="status-msg">Requesting camera access...</div>
-
     <!-- Top Controls Bar -->
     <div class="top-bar">
       <div class="left-controls">
@@ -320,18 +287,36 @@
           <span>Scorecard: ON</span>
         </button>
 
-        <!-- Lens / Camera Device Selection Dropdown -->
-        <select id="camera-select" class="btn" onchange="changeCameraDevice(this.value)">
-          <option value="environment">Back Camera</option>
-          <option value="user">Front Camera</option>
-        </select>
-
         <!-- Flip Camera Quick Icon Button -->
-        <button class="btn btn-icon" onclick="switchCameraLens()" title="Quick Switch Lens">
+        <button class="btn btn-icon" onclick="switchCameraLens()" title="Switch Front/Back Lens">
           <svg viewBox="0 0 24 24">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
           </svg>
         </button>
+
+        <!-- Top Bar Zoom Options -->
+        <div class="zoom-group">
+          <div class="zoom-presets">
+            <button class="zoom-btn active" data-zoom="1" onclick="applyZoom(1, this)">1x</button>
+            <button class="zoom-btn" data-zoom="2" onclick="applyZoom(2, this)">2x</button>
+            <button class="zoom-btn" data-zoom="4" onclick="applyZoom(4, this)">4x</button>
+            <button class="zoom-btn" data-zoom="5" onclick="applyZoom(5, this)">5x</button>
+            <button class="zoom-btn" data-zoom="10" onclick="applyZoom(10, this)">10x</button>
+          </div>
+          <div class="zoom-slider-container">
+            <input 
+              type="range" 
+              id="zoom-slider" 
+              class="zoom-slider" 
+              min="1" 
+              max="10" 
+              step="0.1" 
+              value="1" 
+              oninput="onSliderInput(this.value)"
+            >
+            <span id="zoom-label">1.0x</span>
+          </div>
+        </div>
 
         <!-- Resolution Selector -->
         <select id="resolution-select" class="btn" onchange="changeResolution(this.value)">
@@ -366,30 +351,7 @@
       ></iframe>
     </div>
 
-    <!-- Bottom Zoom Controls: Presets (1x, 2x, 4x, 5x, 10x) + Slider -->
-    <div class="bottom-bar">
-      <div class="zoom-presets">
-        <button class="zoom-btn active" data-zoom="1" onclick="applyZoom(1, this)">1x</button>
-        <button class="zoom-btn" data-zoom="2" onclick="applyZoom(2, this)">2x</button>
-        <button class="zoom-btn" data-zoom="4" onclick="applyZoom(4, this)">4x</button>
-        <button class="zoom-btn" data-zoom="5" onclick="applyZoom(5, this)">5x</button>
-        <button class="zoom-btn" data-zoom="10" onclick="applyZoom(10, this)">10x</button>
-      </div>
-
-      <div class="zoom-slider-container">
-        <input 
-          type="range" 
-          id="zoom-slider" 
-          class="zoom-slider" 
-          min="1" 
-          max="10" 
-          step="0.1" 
-          value="1" 
-          oninput="onSliderInput(this.value)"
-        >
-        <span id="zoom-label">1.0x</span>
-      </div>
-    </div>
+    <div id="status-banner">Ready</div>
   </div>
 
   <script>
@@ -399,7 +361,6 @@
     let recordedChunks = [];
     let isRecording = false;
     let currentFacingMode = 'environment';
-    let currentDeviceId = null;
     let currentResHeight = 1080;
     let currentFps = 30;
     let isOverlayVisible = true;
@@ -408,115 +369,67 @@
     let currentZoom = 1;
 
     const videoEl = document.getElementById('camera-feed');
-    const statusMsg = document.getElementById('status-msg');
     const recordBtn = document.getElementById('record-btn');
     const recordText = document.getElementById('record-text');
     const overlayWrapper = document.getElementById('overlay-wrapper');
     const toggleOverlayBtn = document.getElementById('toggle-overlay-btn');
-    const cameraSelect = document.getElementById('camera-select');
     const zoomSlider = document.getElementById('zoom-slider');
     const zoomLabel = document.getElementById('zoom-label');
+    const statusBanner = document.getElementById('status-banner');
 
-    function updateStatus(message, isError = false) {
-      if (!message) {
-        statusMsg.classList.add('hidden');
-      } else {
-        statusMsg.innerText = message;
-        statusMsg.style.color = isError ? '#f87171' : '#cbd5e1';
-        statusMsg.classList.remove('hidden');
-      }
-    }
-
-    async function enumerateDevices() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        
-        if (videoDevices.length > 0) {
-          cameraSelect.innerHTML = '';
-          videoDevices.forEach((device, idx) => {
-            const opt = document.createElement('option');
-            opt.value = device.deviceId;
-            opt.innerText = device.label || `Camera Lens ${idx + 1}`;
-            if (currentDeviceId === device.deviceId) opt.selected = true;
-            cameraSelect.appendChild(opt);
-          });
-        }
-      } catch (e) {
-        console.warn('Device enumeration error:', e);
-      }
+    function updateStatus(msg) {
+      statusBanner.innerText = msg;
     }
 
     async function initCamera() {
       updateStatus('Initializing camera...');
-
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
 
       const videoConstraints = {
+        facingMode: { ideal: currentFacingMode },
         height: { ideal: currentResHeight },
         width: { ideal: Math.round(currentResHeight * (16 / 9)) },
-        frameRate: { ideal: currentFps }
+        frameRate: { ideal: currentFps },
+        zoom: true
       };
 
-      if (currentDeviceId) {
-        videoConstraints.deviceId = { exact: currentDeviceId };
-      } else {
-        videoConstraints.facingMode = { ideal: currentFacingMode };
-      }
-
       try {
-        // First try with ideal settings
         mediaStream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints,
           audio: true
         });
-      } catch (err) {
-        console.warn('Primary camera request failed, retrying basic fallback:', err);
-        try {
-          // Fallback to basic video without specific resolution/FPS constraints
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
-          });
-        } catch (e) {
-          console.error('Camera access failed completely:', e);
-          updateStatus('Camera Access Denied or Unavailable. Please grant permission and refresh.', true);
-          return;
-        }
-      }
 
-      // Attach media stream
-      videoEl.srcObject = mediaStream;
-      videoTrack = mediaStream.getVideoTracks()[0];
-      
-      if (videoTrack) {
-        const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
-        if (settings.deviceId) currentDeviceId = settings.deviceId;
-
-        if (typeof videoTrack.getCapabilities === 'function') {
+        videoEl.srcObject = mediaStream;
+        videoTrack = mediaStream.getVideoTracks()[0];
+        
+        if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
           const capabilities = videoTrack.getCapabilities();
           if (capabilities.zoom) {
             zoomSlider.min = capabilities.zoom.min || 1;
             zoomSlider.max = Math.min(capabilities.zoom.max || 10, 10);
           }
         }
+
+        updateStatus('Camera Ready');
+        applyZoom(currentZoom);
+      } catch (err) {
+        console.warn('Init with zoom flag failed, attempting standard constraints:', err);
+        delete videoConstraints.zoom;
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+          videoEl.srcObject = mediaStream;
+          videoTrack = mediaStream.getVideoTracks()[0];
+          updateStatus('Camera Ready (Digital Zoom)');
+          applyZoom(currentZoom);
+        } catch (e) {
+          updateStatus('Camera Access Error: ' + e.message);
+        }
       }
-
-      updateStatus(null); // Hide status banner on success
-      await enumerateDevices();
-      applyZoom(currentZoom);
-    }
-
-    function changeCameraDevice(deviceId) {
-      currentDeviceId = deviceId;
-      initCamera();
     }
 
     function switchCameraLens() {
-      currentDeviceId = null;
       currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
       initCamera();
     }
@@ -591,22 +504,13 @@
     }
 
     function startRecording() {
-      if (!mediaStream) {
-        alert('No active camera stream available to record.');
-        return;
-      }
       recordedChunks = [];
       const options = { mimeType: 'video/webm;codecs=vp9' };
       
       try {
         mediaRecorder = new MediaRecorder(mediaStream, options);
       } catch (e) {
-        try {
-          mediaRecorder = new MediaRecorder(mediaStream);
-        } catch (err) {
-          alert('Recording is not supported on this browser/device.');
-          return;
-        }
+        mediaRecorder = new MediaRecorder(mediaStream);
       }
 
       mediaRecorder.ondataavailable = (e) => {
@@ -630,9 +534,7 @@
     }
 
     function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
+      if (mediaRecorder) mediaRecorder.stop();
       isRecording = false;
       recordBtn.classList.remove('recording');
       clearInterval(timerInterval);
@@ -640,7 +542,6 @@
     }
 
     function exportVideo() {
-      if (recordedChunks.length === 0) return;
       const blob = new Blob(recordedChunks, { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
