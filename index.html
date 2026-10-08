@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cricket Match Recorder (Landscape)</title>
+  <title>Cricket Match Recorder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -22,7 +23,6 @@
       color: #fff;
     }
 
-    /* Fullscreen Camera Container */
     #app-container {
       position: relative;
       width: 100vw;
@@ -31,6 +31,7 @@
       justify-content: center;
       align-items: center;
       background-color: #000;
+      overflow: hidden;
     }
 
     video {
@@ -39,58 +40,37 @@
       height: 100%;
       object-fit: cover;
       background: #000;
+      transition: transform 0.1s ease-out;
     }
 
-    /* Top Control Bar */
-    .top-bar {
-      position: absolute;
-      top: 12px;
-      left: 16px;
-      right: 16px;
-      height: 50px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 50;
-      pointer-events: none;
-    }
-
-    .top-bar > * {
-      pointer-events: auto;
-    }
-
-    .left-controls, .right-controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .btn {
+    /* Glassmorphism Controls */
+    .glass-btn {
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
-      padding: 8px 14px;
+      padding: 6px 10px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       backdrop-filter: blur(8px);
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+      outline: none;
     }
 
-    .btn:active {
+    .glass-btn:active {
       transform: scale(0.95);
     }
 
-    .btn-toggle.active {
+    .glass-btn.active {
       background: rgba(16, 185, 129, 0.85);
       border-color: #34d399;
     }
 
-    .btn-toggle.inactive {
+    .glass-btn.inactive {
       background: rgba(239, 68, 68, 0.85);
       border-color: #f87171;
     }
@@ -99,13 +79,13 @@
       background: #ef4444;
       color: #fff;
       border: none;
-      padding: 8px 18px;
+      padding: 8px 16px;
       border-radius: 20px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
       cursor: pointer;
     }
@@ -128,20 +108,80 @@
       100% { opacity: 1; }
     }
 
-    /* Scorecard Overlay Box - Placed cleanly in Top-Left in Landscape */
+    /* Adaptive Overlay Layout for Portrait & Landscape */
     #overlay-wrapper {
       position: absolute;
-      top: 68px;
-      left: 16px;
-      width: clamp(320px, 45vw, 600px);
-      height: 130px;
       z-index: 30;
       border-radius: 10px;
       overflow: hidden;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      transition: opacity 0.3s ease;
+      transition: all 0.3s ease;
+    }
+
+    /* Landscape Layout */
+    @media (orientation: landscape) {
+      .top-bar {
+        position: absolute;
+        top: 12px;
+        left: 16px;
+        right: 16px;
+        height: 48px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 50;
+      }
+      #overlay-wrapper {
+        top: 68px;
+        left: 16px;
+        width: clamp(320px, 45vw, 550px);
+        height: 125px;
+      }
+      .bottom-bar {
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+      }
+    }
+
+    /* Portrait Layout */
+    @media (orientation: portrait) {
+      .top-bar {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 50;
+      }
+      .top-controls-row {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #overlay-wrapper {
+        top: 110px;
+        left: 12px;
+        right: 12px;
+        width: calc(100vw - 24px);
+        height: 120px;
+      }
+      .bottom-bar {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100vw - 24px);
+        justify-content: center;
+        z-index: 50;
+      }
     }
 
     #overlay-wrapper.hidden {
@@ -155,29 +195,30 @@
       background: transparent;
     }
 
-    /* Bottom Control Bar - Zoom Controls */
+    /* Bottom Zoom Bar */
     .bottom-bar {
-      position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 50;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 30px;
-      padding: 4px 8px;
+      padding: 6px 14px;
       display: flex;
-      gap: 6px;
+      align-items: center;
+      gap: 10px;
       backdrop-filter: blur(8px);
+    }
+
+    .zoom-presets {
+      display: flex;
+      gap: 4px;
     }
 
     .zoom-btn {
       background: transparent;
       border: none;
       color: rgba(255, 255, 255, 0.7);
-      padding: 6px 14px;
+      padding: 5px 10px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -187,77 +228,112 @@
       color: #0f172a;
     }
 
-    /* Portrait Rotation Warning */
-    #landscape-warning {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #0f172a;
-      z-index: 9999;
-      flex-direction: column;
-      justify-content: center;
+    .zoom-slider-container {
+      display: flex;
       align-items: center;
-      text-align: center;
-      padding: 20px;
+      gap: 6px;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      padding-left: 10px;
     }
 
-    #landscape-warning svg {
-      width: 64px;
-      height: 64px;
-      fill: #38bdf8;
-      margin-bottom: 16px;
-      animation: rotateHint 2s infinite ease-in-out;
+    .zoom-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 90px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      outline: none;
     }
 
-    @keyframes rotateHint {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-90deg); }
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
     }
 
-    @media screen and (orientation: portrait) {
-      #landscape-warning {
-        display: flex;
-      }
+    .zoom-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      border: none;
+    }
+
+    #zoom-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      min-width: 30px;
+    }
+
+    /* Orientation Badge */
+    #mode-indicator {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #cbd5e1;
     }
   </style>
 </head>
 <body>
 
-  <!-- Force Landscape Orientation Notice -->
-  <div id="landscape-warning">
-    <svg viewBox="0 0 24 24">
-      <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
-    </svg>
-    <h2>Rotate Device</h2>
-    <p style="color: #94a3b8; margin-top: 8px; font-size: 14px;">
-      Please rotate your screen to Landscape mode to use the match recorder.
-    </p>
-  </div>
-
   <div id="app-container">
-    <!-- Camera Feed -->
+    <!-- Camera Preview Element -->
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <!-- Top Navigation Control Bar -->
+    <!-- Top Controls Container -->
     <div class="top-bar">
-      <div class="left-controls">
-        <button id="toggle-overlay-btn" class="btn btn-toggle active" onclick="toggleScorecard()">
-          <span>Scorecard: ON</span>
-        </button>
-        <button id="switch-cam-btn" class="btn" onclick="switchCamera()">
-          🔄 Flip Camera
-        </button>
-      </div>
+      <div class="top-controls-row flex items-center justify-between w-full">
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Toggle Scorecard Overlay -->
+          <button id="toggle-overlay-btn" class="glass-btn active" onclick="toggleScorecard()">
+            <span>Scorecard: ON</span>
+          </button>
 
-      <div class="right-controls">
-        <button id="record-btn" class="record-btn" onclick="toggleRecording()">
-          <span class="rec-dot"></span>
-          <span id="record-text">REC</span>
-        </button>
+          <!-- Camera Lens Switcher -->
+          <select id="camera-select" class="glass-btn" onchange="changeCamera(this.value)">
+            <option value="environment">Back Lens</option>
+            <option value="user">Front Lens</option>
+          </select>
+
+          <!-- Resolution Selector -->
+          <select id="resolution-select" class="glass-btn" onchange="changeResolution(this.value)">
+            <option value="1080">1080p (FHD)</option>
+            <option value="720">720p (HD)</option>
+            <option value="2160">4K (UHD)</option>
+          </select>
+
+          <!-- Frame Rate (FPS) Selector -->
+          <select id="fps-select" class="glass-btn" onchange="changeFPS(this.value)">
+            <option value="30">30 FPS</option>
+            <option value="60">60 FPS</option>
+            <option value="24">24 FPS</option>
+          </select>
+
+          <span id="mode-indicator">LANDSCAPE</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Record Button -->
+          <button id="record-btn" class="record-btn" onclick="toggleRecording()">
+            <span class="rec-dot"></span>
+            <span id="record-text">REC</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Direct Embedded CricClubs Scorecard Overlay -->
+    <!-- CricClubs Scorecard Iframe Overlay -->
     <div id="overlay-wrapper">
       <iframe 
         id="overlay-frame" 
@@ -266,12 +342,29 @@
       ></iframe>
     </div>
 
-    <!-- Bottom Zoom Controls -->
+    <!-- Bottom Zoom Control Bar -->
     <div class="bottom-bar">
-      <button class="zoom-btn active" onclick="setZoom(1, this)">1x</button>
-      <button class="zoom-btn" onclick="setZoom(2, this)">2x</button>
-      <button class="zoom-btn" onclick="setZoom(3, this)">3x</button>
-      <button class="zoom-btn" onclick="setZoom(5, this)">5x</button>
+      <div class="zoom-presets">
+        <button class="zoom-btn active" data-zoom="1" onclick="applyZoom(1, this)">1x</button>
+        <button class="zoom-btn" data-zoom="2" onclick="applyZoom(2, this)">2x</button>
+        <button class="zoom-btn" data-zoom="4" onclick="applyZoom(4, this)">4x</button>
+        <button class="zoom-btn" data-zoom="5" onclick="applyZoom(5, this)">5x</button>
+        <button class="zoom-btn" data-zoom="10" onclick="applyZoom(10, this)">10x</button>
+      </div>
+
+      <div class="zoom-slider-container">
+        <input 
+          type="range" 
+          id="zoom-slider" 
+          class="zoom-slider" 
+          min="1" 
+          max="10" 
+          step="0.1" 
+          value="1" 
+          oninput="onSliderInput(this.value)"
+        >
+        <span id="zoom-label">1.0x</span>
+      </div>
     </div>
   </div>
 
@@ -282,42 +375,107 @@
     let recordedChunks = [];
     let isRecording = false;
     let currentFacingMode = 'environment';
+    let currentResHeight = 1080;
+    let currentFPS = 30;
     let isOverlayVisible = true;
     let timerInterval = null;
     let recordSeconds = 0;
+    let currentZoom = 1;
 
     const videoEl = document.getElementById('camera-feed');
     const recordBtn = document.getElementById('record-btn');
     const recordText = document.getElementById('record-text');
     const overlayWrapper = document.getElementById('overlay-wrapper');
     const toggleOverlayBtn = document.getElementById('toggle-overlay-btn');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const zoomLabel = document.getElementById('zoom-label');
+    const modeIndicator = document.getElementById('mode-indicator');
 
-    async function initCamera() {
+    // Detect Orientation Changes
+    function checkOrientation() {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      modeIndicator.innerText = isPortrait ? 'PORTRAIT' : 'LANDSCAPE';
+    }
+    window.addEventListener('resize', checkOrientation);
+
+    // Hardware Lens Enumeration
+    async function enumerateDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        const selectEl = document.getElementById('camera-select');
+        
+        if (videoDevices.length > 2) {
+          selectEl.innerHTML = '';
+          videoDevices.forEach((device, idx) => {
+            const opt = document.createElement('option');
+            opt.value = device.deviceId;
+            opt.innerText = device.label || `Lens ${idx + 1}`;
+            selectEl.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.log('Device enumeration error:', e);
+      }
+    }
+
+    // Initialize Camera Stream with Resolution, FPS, and Lens constraints
+    async function initCamera(deviceIdOrFacing) {
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
 
-      const constraints = {
-        video: {
-          facingMode: { ideal: currentFacingMode },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        },
-        audio: true
+      const videoConstraints = {
+        height: { ideal: currentResHeight },
+        width: { ideal: Math.round(currentResHeight * (16 / 9)) },
+        frameRate: { ideal: currentFPS, max: currentFPS }
       };
 
+      if (deviceIdOrFacing === 'user' || deviceIdOrFacing === 'environment') {
+        videoConstraints.facingMode = { ideal: deviceIdOrFacing };
+      } else if (deviceIdOrFacing) {
+        videoConstraints.deviceId = { exact: deviceIdOrFacing };
+      } else {
+        videoConstraints.facingMode = { ideal: 'environment' };
+      }
+
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraints,
+          audio: true
+        });
         videoEl.srcObject = mediaStream;
         videoTrack = mediaStream.getVideoTracks()[0];
+        
+        // Detect hardware zoom limits if supported
+        if (videoTrack) {
+          const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+          if (capabilities.zoom) {
+            zoomSlider.min = capabilities.zoom.min || 1;
+            zoomSlider.max = Math.min(capabilities.zoom.max || 10, 10);
+          }
+        }
+
+        enumerateDevices();
+        applyZoom(currentZoom);
       } catch (err) {
-        alert('Could not access camera hardware: ' + err.message);
+        alert('Camera Access Error: ' + err.message);
       }
     }
 
-    async function switchCamera() {
-      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
-      await initCamera();
+    function changeCamera(val) {
+      currentFacingMode = val;
+      initCamera(val);
+    }
+
+    function changeResolution(val) {
+      currentResHeight = parseInt(val);
+      initCamera(currentFacingMode);
+    }
+
+    function changeFPS(val) {
+      currentFPS = parseInt(val);
+      initCamera(currentFacingMode);
     }
 
     function toggleScorecard() {
@@ -335,26 +493,42 @@
       }
     }
 
-    async function setZoom(zoomValue, btnElement) {
-      document.querySelectorAll('.zoom-btn').forEach(btn => btn.classList.remove('active'));
-      if (btnElement) btnElement.classList.add('active');
+    // Zoom Handling (Hardware + CSS Fallback)
+    async function applyZoom(val, btnElement = null) {
+      currentZoom = parseFloat(val);
+      zoomSlider.value = currentZoom;
+      zoomLabel.innerText = `${currentZoom.toFixed(1)}x`;
+
+      document.querySelectorAll('.zoom-btn').forEach(btn => {
+        const btnZoom = parseFloat(btn.getAttribute('data-zoom'));
+        if (btnElement) {
+          btn.classList.toggle('active', btn === btnElement);
+        } else {
+          btn.classList.toggle('active', btnZoom === currentZoom);
+        }
+      });
 
       if (!videoTrack) return;
-      const capabilities = videoTrack.getCapabilities();
+      const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
 
       if (capabilities.zoom) {
         try {
-          const targetZoom = Math.min(Math.max(zoomValue, capabilities.zoom.min), capabilities.zoom.max);
+          const targetZoom = Math.min(Math.max(currentZoom, capabilities.zoom.min), capabilities.zoom.max);
           await videoTrack.applyConstraints({ advanced: [{ zoom: targetZoom }] });
         } catch (e) {
           console.error('Hardware zoom error:', e);
         }
       } else {
-        videoEl.style.transform = `scale(${zoomValue})`;
+        videoEl.style.transform = `scale(${currentZoom})`;
         videoEl.style.transformOrigin = 'center center';
       }
     }
 
+    function onSliderInput(val) {
+      applyZoom(val);
+    }
+
+    // Recording Controls
     function toggleRecording() {
       if (!isRecording) {
         startRecording();
@@ -412,7 +586,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      initCamera();
+      checkOrientation();
+      initCamera('environment');
     });
   </script>
 </body>
